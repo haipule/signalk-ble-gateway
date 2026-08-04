@@ -1,0 +1,16 @@
+# Local firmware credentials
+firmware/include/secrets.h
+
+# PlatformIO build and editor state
+firmware/.pio/
+firmware/.cache/
+firmware/.vscode/
+
+# Local OS/editor files
+.DS_Store
+*.swp
+
+# Generated ESP-IDF state
+firmware/managed_components/
+firmware/sdkconfig.*
+!firmware/sdkconfig.defaults

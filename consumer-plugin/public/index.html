@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Victron BLE</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Signal K Consumer</p>
+          <h1>Victron BLE</h1>
+          <p class="subtitle">Decryption and diagnostics run exclusively on the server.</p>
+        </div>
+        <div id="connection" class="badge">Connecting…</div>
+      </header>
+
+      <section id="summary" class="summary" aria-label="Summary"></section>
+      <section>
+        <div class="section-title">
+          <h2>Devices</h2>
+          <a href="/admin/#/serverConfiguration/plugins/signalk-victron-ble-consumer" class="button">Open configuration</a>
+        </div>
+        <div id="devices" class="devices"></div>
+      </section>
+    </main>
+    <template id="device-template">
+      <article class="device-card">
+        <div class="device-heading">
+          <div><h3></h3><p class="mac"></p></div>
+          <span class="state"></span>
+        </div>
+        <dl></dl>
+        <p class="error" hidden></p>
+      </article>
+    </template>
+    <script src="app.js"></script>
+  </body>
+</html>

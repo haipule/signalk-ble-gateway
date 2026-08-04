@@ -1,0 +1,21 @@
+{
+  "name": "signalk-ble-gateway-provider",
+  "version": "0.1.0",
+  "description": "Signal K transition provider for generic remote BLE gateways",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-category-hardware",
+    "bluetooth",
+    "ble"
+  ],
+  "signalk-plugin-enabled-by-default": false,
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "Apache-2.0"
+}
