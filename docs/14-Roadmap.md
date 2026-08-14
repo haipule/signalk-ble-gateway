@@ -18,7 +18,7 @@
 
 - [x] Passive BLE scanning and bounded batching.
 - [x] Authenticated HTTP POST with retained in-flight retry.
-- [x] Keep GATT explicitly outside protocol v1.
+- [x] Keep GATT explicitly outside the advertisement MVP.
 
 ## 4. Gateway provider
 
@@ -37,11 +37,13 @@
 - [x] Provide a key-safe diagnostic web application.
 - [x] Verify Orion paths and values in the Signal K data browser.
 
-## 6. Target migration
+## 6. Official BLE API migration
 
-- [ ] Integrate the provider with the official Signal K BLE Provider API.
-- [ ] Move consumers to its unified advertisement stream.
-- [ ] Keep firmware and gateway protocol unchanged.
+- [x] Send firmware batches to the built-in remote BLE provider.
+- [x] Move the Victron consumer to the unified advertisement stream.
+- [x] Remove the transitional Signal K provider from the 0.2 branch.
+- [ ] Validate against the first stable Signal K release containing PR #2588.
+- [ ] Complete parallel hardware comparison with the 0.1 release.
 
 ## 7. Later GATT and multi-gateway work
 

@@ -6,23 +6,24 @@ The project deliberately separates transport, Signal K integration, and
 manufacturer-specific decoding:
 
 ```text
-BLE devices -> ESP32 gateway -> versioned gateway protocol
-            -> Signal K gateway provider -> consumer plugins -> Signal K
+BLE devices -> ESP32 gateway -> official remote gateway HTTP API
+            -> Signal K BLE Provider API -> consumer plugins -> Signal K
 ```
 
 The ESP32 forwards raw BLE advertisements. It does not contain Victron logic,
 decryption keys, or Signal K paths. Manufacturer logic runs exclusively in
 server-side consumer plugins.
 
-## Current status: v0.1.0-rc.1
+## Current status: 0.2.0 migration branch
 
-The advertisement MVP is operational and its scope is frozen for hardware
-acceptance:
+This branch is prepared for the official BLE Provider API merged by Signal K
+PR #2588. The working legacy implementation remains available as
+`v0.1.0-rc.1` and on the 0.1 release line.
 
 - passive BLE scanning on an ESP32,
 - bounded advertisement queues and HTTP batches with retry/backoff,
-- authenticated, versioned gateway protocol v1,
-- Signal K gateway provider with status and diagnostic endpoints,
+- authenticated batches to Signal K's built-in remote BLE provider,
+- consumer subscription through `app.bleApi`,
 - server-side Victron advertisement decryption,
 - Lynx Smart BMS decoding,
 - Orion XS decoding,
@@ -51,23 +52,25 @@ The remaining release gate is a long-duration hardware run with stable power.
 A previously observed brownout was a supply reset, not a firmware stability
 failure and not a successful endurance test.
 
-GATT, individual Lynx battery details, and migration to the proposed official
-Signal K BLE Provider API are explicitly outside the 0.1.0 scope.
+GATT remains outside the advertisement MVP. The gateway WebSocket will be
+implemented only when a consumer needs GATT.
 
 ## Components
 
 - `firmware/`: generic ESP32 BLE advertisement gateway
-- `plugin/`: transitional Signal K gateway provider for protocol v1
 - `consumer-plugin/`: Victron decoder and diagnostic web application
 - `docs/`: architecture, protocol, operation, testing, and roadmap
 
 ## Quick start
 
-1. Install and enable `plugin/` on the Signal K server.
+1. Install a Signal K version containing BLE Provider API PR #2588.
 2. Install and configure `consumer-plugin/` for the Victron devices.
 3. Copy `firmware/secrets.example.h` to
    `firmware/include/secrets.h` and enter local credentials.
 4. Build and flash the ESP32 from `firmware/`.
+
+Until the BLE API reaches a stable Signal K release, use this branch only on a
+test server. Keep the `v0.1.x` installation available for rollback.
 
 Detailed installation and acceptance instructions are in
 [`docs/15-Operations-and-Diagnostics.md`](docs/15-Operations-and-Diagnostics.md).

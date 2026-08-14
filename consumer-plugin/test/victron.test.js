@@ -11,17 +11,15 @@ function advertisementFor({ keyHex, modelId = 0xa389, recordType = 2, nonce = 0x
   counter.writeUInt16LE(nonce, 0)
   const cipher = crypto.createCipheriv('aes-128-ctr', key, counter)
   const encrypted = Buffer.concat([cipher.update(clear), cipher.final()])
-  const manufacturer = Buffer.alloc(10 + encrypted.length)
-  manufacturer.writeUInt16LE(0x02e1, 0)
-  manufacturer[2] = 0x10
-  manufacturer[3] = 0x00
-  manufacturer.writeUInt16LE(modelId, 4)
-  manufacturer[6] = recordType
-  manufacturer.writeUInt16LE(nonce, 7)
-  manufacturer[9] = key[0]
-  encrypted.copy(manufacturer, 10)
-  const ad = Buffer.concat([Buffer.from([2, 1, 6, manufacturer.length + 1, 0xff]), manufacturer])
-  return { adv_data: ad.toString('hex').toUpperCase() }
+  const manufacturer = Buffer.alloc(8 + encrypted.length)
+  manufacturer[0] = 0x10
+  manufacturer[1] = 0x00
+  manufacturer.writeUInt16LE(modelId, 2)
+  manufacturer[4] = recordType
+  manufacturer.writeUInt16LE(nonce, 5)
+  manufacturer[7] = key[0]
+  encrypted.copy(manufacturer, 8)
+  return { manufacturerData: { 737: manufacturer.toString('hex').toUpperCase() } }
 }
 
 test('decrypts a Victron manufacturer envelope', () => {

@@ -8,12 +8,13 @@ Before implementation, message formats, versioning, authentication,
 heartbeats, reconnect, correlation, timeouts, and error semantics must be
 specified.
 
-The examined upstream currently uses:
+The official API uses:
 
 ```text
-ws://<server>:<port>/signalk/v2/api/ble/gateway/ws?token=<JWT>
+ws://<server>:<port>/signalk/v2/api/ble/gateway/ws
 ```
 
-It sends `hello` after connection and `status` every 30 seconds. Because the
-token appears in the query string, every log path must redact it. The control
-WebSocket remains disabled for protocol v1.
+The gateway sends `hello` after connection and periodic `status` frames. Signal
+K uses WebSocket ping/pong keepalive and accepts its normal authorization
+sources. The control WebSocket remains disabled for the advertisement-only
+0.2 beta.

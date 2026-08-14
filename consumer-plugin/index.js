@@ -1,6 +1,5 @@
 'use strict'
 
-const { ADVERTISEMENT_EVENT } = require('./lib/gateway-consumer-api')
 const { VictronConsumer } = require('./lib/consumer')
 
 module.exports = function createPlugin(app) {
@@ -41,6 +40,13 @@ module.exports = function createPlugin(app) {
 
     start(settings = {}) {
       consumer = new VictronConsumer(Array.isArray(settings.devices) ? settings.devices : [])
+      if (!app.bleApi || typeof app.bleApi.onAdvertisement !== 'function') {
+        app.setPluginError(
+          'Signal K BLE Provider API unavailable. This plugin requires a ' +
+            'Signal K release containing BLE Provider API PR #2588.'
+        )
+        return
+      }
       listener = advertisement => {
         const result = consumer.accept(advertisement)
         if (result?.state.decoded?.measurements) {
@@ -51,12 +57,12 @@ module.exports = function createPlugin(app) {
           `Decoded ${status.decoded} Victron advertisements; ${status.errors} errors`
         )
       }
-      app.on(ADVERTISEMENT_EVENT, listener)
+      listener = app.bleApi.onAdvertisement(this.id, listener)
       app.setPluginStatus(`Listening for ${consumer.status().devices.length} configured device(s)`)
     },
 
     stop() {
-      if (listener) app.off(ADVERTISEMENT_EVENT, listener)
+      if (listener) listener()
       listener = null
       consumer = null
       app.setPluginStatus('Stopped')

@@ -5,9 +5,9 @@ fields or Signal K paths.
 
 ## Required information
 
-- protocol version and stable gateway ID,
-- device address and address type,
-- RSSI and gateway-relative receive timestamp,
+- stable gateway ID,
+- device address and optional public/random address type,
+- RSSI,
 - optional device name,
 - complete advertising payload as hexadecimal bytes,
 - optional complete scan-response payload.
@@ -19,12 +19,10 @@ deduplication must retain original gateway and signal-quality information.
 ## Processing
 
 ```text
-BLEAdvertisement -> gateway protocol -> provider -> consumer -> Signal K
+BLEAdvertisement -> official remote provider -> BLE API -> consumer -> Signal K
 ```
 
-Reference revision `ae35180d0d1f2cb6d043366a324c5b8320c001eb` of
-`dirkwa/sensesp-ble-gateway` originally transmitted only `mac`, `rssi`,
-optional `name`, and hexadecimal `adv_data`. Protocol v1 additionally preserves
-`address_type`, `scan_rsp_data`, and `received_at_ms` from its internal model.
-The complete raw payload remains authoritative; derived manufacturer or
-service fields are optional server-side representations.
+The wire format transmits `mac`, `rssi`, optional `name`, hexadecimal
+`adv_data`, optional `scan_rsp_data`, and optional `address_type`. Signal K
+timestamps receipt and derives manufacturer and service fields server-side.
+The complete raw payload remains authoritative on the gateway boundary.

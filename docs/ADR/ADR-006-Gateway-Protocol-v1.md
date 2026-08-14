@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded for 0.2 by Signal K PR #2588. Normative only for the 0.1 rollback
+release line.
 
 ## Context
 
@@ -38,5 +39,6 @@ without changing the advertisement model.
 
 ## Migration
 
-When the official BLE Provider API ships, the provider translates protocol-v1
-observations into its model. Firmware and the HTTP contract remain unchanged.
+The merged API includes its own remote provider, so 0.2 changes the firmware
+HTTP contract and removes the transitional plugin instead of translating
+through it.

@@ -1,9 +1,9 @@
 # Signal K BLE Provider API
 
-The BLE Provider API proposed in RFC #2411 and PR #2588 is the target
-integration point for the gateway provider, not a stable firmware interface.
+The BLE Provider API from PR #2588 is merged into Signal K Server `master`.
+This project uses its built-in remote gateway provider directly.
 
-The proposal includes:
+The merged implementation includes:
 
 - a unified advertisement stream,
 - multiple concurrent BLE providers,
@@ -12,10 +12,13 @@ The proposal includes:
 - provider selection by RSSI and availability,
 - REST and WebSocket interfaces for consumers and applications.
 
-## Migration boundary
+## Integration boundary
 
-The gateway provider encapsulates this dependency. Until the API ships, it
-uses the project's transitional integration. Once available, only the
-server-side adapter changes. HTTP POST and the future control WebSocket between
-ESP32 and provider are private gateway protocol transports, not the public BLE
-Provider API.
+Firmware posts batches to
+`/signalk/v2/api/ble/gateway/advertisements`. Consumer plugins subscribe with
+`app.bleApi.onAdvertisement(pluginId, callback)`. A future GATT implementation
+uses `/signalk/v2/api/ble/gateway/ws` and the published AsyncAPI contract.
+
+Consumers require `app.bleApi` explicitly at startup. They report a clear
+plugin error when the installed Signal K version does not provide it; there is
+no silent fallback to the removed private event bus.

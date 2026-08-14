@@ -17,6 +17,8 @@ namespace gateway {
 
 struct AdvertisementGatewayConfig {
   String gateway_id;
+  String gateway_mac;
+  String hostname;
   String firmware_version;
   String provider_token;
   uint32_t post_interval_ms = 2000;
@@ -26,7 +28,8 @@ struct AdvertisementGatewayConfig {
 };
 
 /**
- * Buffers generic BLE advertisements and delivers versioned HTTP batches.
+ * Buffers generic BLE advertisements and delivers Signal K remote-provider
+ * HTTP batches.
  *
  * The transport retains its in-flight batch across transient failures. New
  * observations continue to enter a bounded pending queue. No manufacturer or
@@ -71,10 +74,8 @@ class AdvertisementGateway {
   std::shared_ptr<sensesp::BLEProvisioner> ble_;
   std::shared_ptr<sensesp::SKWSClient> signalk_client_;
   AdvertisementGatewayConfig config_;
-  String boot_id_;
   uint32_t next_sequence_ = 0;
   uint32_t inflight_sequence_ = 0;
-  String inflight_batch_id_;
 
   mutable SemaphoreHandle_t mutex_ = nullptr;
   std::vector<sensesp::BLEAdvertisement> pending_;

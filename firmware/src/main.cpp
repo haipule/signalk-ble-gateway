@@ -240,6 +240,8 @@ void setup() {
 
   gateway::AdvertisementGatewayConfig gateway_config;
   gateway_config.gateway_id = GATEWAY_ID;
+  gateway_config.gateway_mac = ble ? ble->mac_address() : "";
+  gateway_config.hostname = HOSTNAME;
   gateway_config.firmware_version = FIRMWARE_VERSION;
 #ifdef GATEWAY_PROVIDER_TOKEN
   gateway_config.provider_token = GATEWAY_PROVIDER_TOKEN;

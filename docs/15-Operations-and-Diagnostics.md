@@ -3,24 +3,26 @@
 The gateway must remain diagnosable and updateable in an engine-room
 installation without a permanent USB monitor.
 
-## Install Signal K plugins
+## Prerequisite
+
+Install a Signal K build containing BLE Provider API PR #2588. Until the first
+stable release containing it is known, use a separate test server or a backed
+up test installation. The consumer deliberately refuses to start without
+`app.bleApi`.
+
+## Install the Signal K consumer
 
 On the Signal K host:
 
 ```sh
-cd /path/to/signalk-ble-gateway/plugin
-npm link
-cd ~/.signalk
-npm link signalk-ble-gateway-provider
-
 cd /path/to/signalk-ble-gateway/consumer-plugin
 npm link
 cd ~/.signalk
 npm link signalk-victron-ble-consumer
 ```
 
-Restart Signal K. Enable the gateway provider first, then the Victron consumer.
-Configure every consumer device with a stable ID, display name, BLE MAC, and
+Restart Signal K and enable the Victron consumer. Configure every consumer
+device with a stable ID, display name, BLE MAC, and
 32-character advertisement key. Never copy keys into firmware, logs, issues,
 or diagnostic exports.
 
@@ -40,10 +42,10 @@ after board, network, and credentials have been verified.
 
 ## Commissioning checklist
 
-1. Enable provider and consumer.
+1. Enable the consumer and confirm that no BLE API compatibility error appears.
 2. Power the ESP32 from a stable supply.
 3. Confirm `scanning`, `token=available`, and `start_failures=0` on status.
-4. Open `/plugins/signalk-ble-gateway-provider/status`.
+4. Open Signal K's Data → BLE Manager and confirm the gateway and devices.
 5. Open `/signalk-victron-ble-consumer/`.
 6. Compare Lynx and Orion values with simultaneous VictronConnect readings.
 7. Confirm Orion paths in the Signal K data browser.
@@ -65,10 +67,10 @@ The local UI reports firmware/build ID, hostname, uptime, reset reason, current
 and minimum heap, Wi-Fi status/RSSI, BLE scan state, token availability,
 advertisement counters, queue depth, drops, and POST outcomes.
 
-### Provider and consumer status
+### BLE Manager and consumer status
 
-- `/plugins/signalk-ble-gateway-provider/status` reports provider lifecycle,
-  gateways, accepted batches, duplicates, and recent observations.
+- Signal K's BLE Manager reports gateways, providers, devices, RSSI and GATT
+  claims.
 - `/plugins/signalk-victron-ble-consumer/status` reports configured devices,
   online state, last observation, decode errors, and decoded diagnostics.
 
@@ -107,16 +109,22 @@ Run at least 24 hours on stable power. At completion:
 
 A shorter uptime or `Brownout` reset reason fails this test.
 
-## Provider outage test
+## Server outage test
 
-1. Record gateway and provider counters.
-2. Disable the gateway provider.
-3. Confirm status reports `running: false` and POST returns HTTP 503.
+1. Record gateway and consumer counters.
+2. Stop the Signal K server.
+3. Confirm the firmware retains its in-flight batch and increments failures.
 4. Confirm consumer timestamps stop while the firmware queue and POST-failure
    counters respond as designed.
-5. Re-enable the provider.
-6. Confirm `running: true`, queue recovery, and resumed delivery.
-7. Confirm repeated batch IDs never duplicate consumer events.
+5. Restart Signal K.
+6. Confirm queue recovery and resumed delivery.
+7. Confirm repeated values do not create incorrect Signal K state.
+
+## Upgrade and rollback
+
+Keep the working 0.1 firmware and plugins available until the stable Signal K
+release has passed the endurance test. Rollback consists of disabling the 0.2
+consumer, flashing the 0.1 firmware, and re-enabling the 0.1 gateway provider.
 
 ## Acceptance record
 

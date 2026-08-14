@@ -2,13 +2,14 @@
 
 ## Status
 
-Accepted
+Superseded by the official remote gateway protocol merged in Signal K PR
+#2588. Retained as the rationale for the 0.1 release line.
 
 ## Decision
 
-Firmware communicates only through a private, versioned protocol. The
-advertisement MVP uses HTTP POST; a control WebSocket is specified only for a
-later GATT phase.
+The 0.1 firmware communicated through a private, versioned protocol. The 0.2
+firmware posts to Signal K's official remote gateway endpoint; GATT remains a
+later phase using the official WebSocket contract.
 
 The design stays structurally compatible with `dirkwa/sensesp-ble-gateway`
 where possible. Required extensions are documented and should be proposed

@@ -5,18 +5,25 @@ const assert = require('node:assert/strict')
 const { EventEmitter } = require('node:events')
 const createPlugin = require('../index')
 const { measurementDelta } = require('../index')
-const { ADVERTISEMENT_EVENT } = require('../lib/gateway-consumer-api')
 
 function harness() {
   const app = new EventEmitter()
   const statuses = []
   app.setPluginStatus = value => statuses.push(value)
+  app.setPluginError = value => statuses.push(value)
   app.handleMessage = () => {}
+  const advertisementCallbacks = new Map()
+  app.bleApi = {
+    onAdvertisement: (pluginId, callback) => {
+      advertisementCallbacks.set(pluginId, callback)
+      return () => advertisementCallbacks.delete(pluginId)
+    }
+  }
   const routes = new Map()
   const router = { get: (path, handler) => routes.set(path, handler) }
   const plugin = createPlugin(app)
   plugin.registerWithRouter(router)
-  return { app, plugin, routes, statuses }
+  return { app, plugin, routes, statuses, advertisementCallbacks }
 }
 
 function responseRecorder() {
@@ -28,12 +35,20 @@ function responseRecorder() {
   }
 }
 
-test('subscribes and unsubscribes from the provider event', () => {
+test('subscribes and unsubscribes through the official BLE API', () => {
   const instance = harness()
   instance.plugin.start({ devices: [] })
-  assert.equal(instance.app.listenerCount(ADVERTISEMENT_EVENT), 1)
+  assert.equal(instance.advertisementCallbacks.has(instance.plugin.id), true)
   instance.plugin.stop()
-  assert.equal(instance.app.listenerCount(ADVERTISEMENT_EVENT), 0)
+  assert.equal(instance.advertisementCallbacks.size, 0)
+})
+
+test('reports a clear error when the BLE API is unavailable', () => {
+  const instance = harness()
+  delete instance.app.bleApi
+  instance.plugin.start({ devices: [] })
+  assert.match(instance.statuses.at(-1), /requires.*PR #2588/i)
+  assert.equal(instance.advertisementCallbacks.size, 0)
 })
 
 test('status route masks configured keys', () => {

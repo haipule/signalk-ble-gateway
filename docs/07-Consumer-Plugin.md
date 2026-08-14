@@ -10,16 +10,13 @@ Consumer plugins contain domain and manufacturer logic. They:
 
 Consumers do not access the ESP32 or HTTP gateway protocol directly.
 
-## Transitional consumer interface
+## Official consumer interface
 
-Until the official API is available, the gateway provider emits every newly
-accepted advertisement exactly once as internal event
-`signalk-ble-gateway:advertisement:v1`. The event contains only the generic
-provider model. Consumers subscribe through a small adapter, so decoders know
-nothing about HTTP batches or routes.
-
-Only this adapter should change during migration to the official BLE Provider
-API.
+Consumers subscribe to the merged provider stream through
+`app.bleApi.onAdvertisement(pluginId, callback)`. Signal K supplies parsed
+`manufacturerData`, `serviceData`, provider identity, RSSI, MAC, and timestamp.
+The Victron consumer reads company ID `0x02E1` (decimal key `737`) from
+`manufacturerData`; it does not parse the gateway HTTP body.
 
 ## Victron consumer
 

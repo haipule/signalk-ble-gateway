@@ -3,7 +3,6 @@
 #include <ArduinoJson.h>
 #include <esp_http_client.h>
 #include <esp_log.h>
-#include <esp_random.h>
 
 #include <algorithm>
 
@@ -11,9 +10,8 @@ namespace gateway {
 namespace {
 
 constexpr char kLogTag[] = "gateway_http";
-constexpr char kProtocolVersion[] = "1";
 constexpr char kAdvertisementsPath[] =
-    "/plugins/signalk-ble-gateway-provider/advertisements";
+    "/signalk/v2/api/ble/gateway/advertisements";
 constexpr uint32_t kHttpTimeoutMs = 5000;
 constexpr uint32_t kScanRecoveryIntervalMs = 10000;
 constexpr uint32_t kMissingTokenLogIntervalMs = 30000;
@@ -30,27 +28,15 @@ String bytes_to_hex(const std::vector<uint8_t>& bytes) {
   return result;
 }
 
-String address_type_name(const uint8_t address_type) {
+const char* address_type_name(const uint8_t address_type) {
   switch (address_type) {
     case 0:
       return "public";
     case 1:
       return "random";
-    case 2:
-      return "public_identity";
-    case 3:
-      return "random_identity";
     default:
-      return "unknown";
+      return nullptr;
   }
-}
-
-String generate_boot_id() {
-  char result[17];
-  snprintf(result, sizeof(result), "%08lX%08lX",
-           static_cast<unsigned long>(esp_random()),
-           static_cast<unsigned long>(esp_random()));
-  return String(result);
 }
 
 }  // namespace
@@ -61,8 +47,7 @@ AdvertisementGateway::AdvertisementGateway(
     AdvertisementGatewayConfig config)
     : ble_(std::move(ble)),
       signalk_client_(std::move(signalk_client)),
-      config_(std::move(config)),
-      boot_id_(generate_boot_id()) {
+      config_(std::move(config)) {
   mutex_ = xSemaphoreCreateMutex();
   pending_.reserve(config_.max_pending_advertisements);
   inflight_.reserve(config_.max_batch_size);
@@ -119,8 +104,8 @@ bool AdvertisementGateway::start() {
     return false;
   }
 
-  ESP_LOGI(kLogTag, "Started protocol=%s gateway_id=%s boot_id=%s",
-           kProtocolVersion, config_.gateway_id.c_str(), boot_id_.c_str());
+  ESP_LOGI(kLogTag, "Started official BLE API gateway_id=%s",
+           config_.gateway_id.c_str());
   return true;
 }
 
@@ -250,30 +235,32 @@ bool AdvertisementGateway::prepare_batch() {
   inflight_.assign(pending_.begin(), pending_.begin() + count);
   pending_.erase(pending_.begin(), pending_.begin() + count);
   inflight_sequence_ = next_sequence_++;
-  inflight_batch_id_ = config_.gateway_id + ":" + boot_id_ + ":" +
-                       String(inflight_sequence_);
   xSemaphoreGive(mutex_);
   return true;
 }
 
 String AdvertisementGateway::serialize_batch() const {
   JsonDocument document;
-  document["protocol_version"] = kProtocolVersion;
   document["gateway_id"] = config_.gateway_id;
-  document["boot_id"] = boot_id_;
-  document["batch_id"] = inflight_batch_id_;
-  document["sequence"] = inflight_sequence_;
-  document["uptime_ms"] = millis();
   document["firmware"] = config_.firmware_version;
+  document["uptime"] = millis() / 1000;
+  document["free_heap"] = ESP.getFreeHeap();
+  if (!config_.gateway_mac.isEmpty()) {
+    document["mac"] = config_.gateway_mac;
+  }
+  if (!config_.hostname.isEmpty()) {
+    document["hostname"] = config_.hostname;
+  }
 
   JsonArray devices = document["devices"].to<JsonArray>();
   for (const auto& advertisement : inflight_) {
     JsonObject device = devices.add<JsonObject>();
     device["mac"] = advertisement.address;
-    device["address_type"] =
-        address_type_name(advertisement.address_type);
+    const char* address_type = address_type_name(advertisement.address_type);
+    if (address_type != nullptr) {
+      device["address_type"] = address_type;
+    }
     device["rssi"] = advertisement.rssi;
-    device["received_at_ms"] = advertisement.received_at_ms;
     if (!advertisement.name.isEmpty()) {
       device["name"] = advertisement.name;
     }
@@ -333,12 +320,11 @@ bool AdvertisementGateway::post_batch() {
     const size_t delivered_count = inflight_.size();
     delivered_.fetch_add(delivered_count, std::memory_order_relaxed);
     post_success_.fetch_add(1, std::memory_order_relaxed);
-    ESP_LOGI(kLogTag, "Delivered batch=%s advertisements=%u",
-             inflight_batch_id_.c_str(),
+    ESP_LOGI(kLogTag, "Delivered batch sequence=%u advertisements=%u",
+             static_cast<unsigned>(inflight_sequence_),
              static_cast<unsigned>(delivered_count));
     if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
       inflight_.clear();
-      inflight_batch_id_ = "";
       xSemaphoreGive(mutex_);
     }
     return true;
@@ -346,12 +332,11 @@ bool AdvertisementGateway::post_batch() {
 
   post_fail_.fetch_add(1, std::memory_order_relaxed);
   if (status == 400) {
-    ESP_LOGE(kLogTag, "Provider rejected invalid batch=%s",
-             inflight_batch_id_.c_str());
+    ESP_LOGE(kLogTag, "BLE API rejected invalid batch sequence=%u",
+             static_cast<unsigned>(inflight_sequence_));
     if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
       dropped_.fetch_add(inflight_.size(), std::memory_order_relaxed);
       inflight_.clear();
-      inflight_batch_id_ = "";
       xSemaphoreGive(mutex_);
     }
     return true;
@@ -368,8 +353,9 @@ bool AdvertisementGateway::post_batch() {
                status);
     }
   } else {
-    ESP_LOGW(kLogTag, "POST failed result=%s status=%d batch=%s",
-             esp_err_to_name(result), status, inflight_batch_id_.c_str());
+    ESP_LOGW(kLogTag, "POST failed result=%s status=%d sequence=%u",
+             esp_err_to_name(result), status,
+             static_cast<unsigned>(inflight_sequence_));
   }
   return false;
 }

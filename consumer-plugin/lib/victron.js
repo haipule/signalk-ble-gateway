@@ -1,7 +1,7 @@
 'use strict'
 
 const crypto = require('node:crypto')
-const { manufacturerData } = require('./ble-advertisement')
+const { parseHex } = require('./ble-advertisement')
 
 const VICTRON_COMPANY_ID = 0x02e1
 const RECORD_TYPES = {
@@ -20,8 +20,9 @@ function normalizeKey(value) {
 }
 
 function decodeEnvelope(advertisement, keyValue) {
-  const payload = manufacturerData(advertisement.adv_data, VICTRON_COMPANY_ID)
-  if (!payload) return null
+  const manufacturerHex = advertisement?.manufacturerData?.[VICTRON_COMPANY_ID]
+  if (manufacturerHex === undefined) return null
+  const payload = parseHex(manufacturerHex)
   if (payload.length < 9) throw new Error('Victron manufacturer payload is too short')
   if (payload[0] !== 0x10) throw new Error('unsupported Victron manufacturer record')
 

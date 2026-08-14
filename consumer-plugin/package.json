@@ -1,7 +1,7 @@
 {
   "name": "signalk-victron-ble-consumer",
-  "version": "0.1.0",
-  "description": "Server-side Victron BLE consumer for Signal K BLE Gateway advertisements",
+  "version": "0.2.0-beta.1",
+  "description": "Victron consumer for the official Signal K BLE Provider API",
   "main": "index.js",
   "type": "commonjs",
   "engines": { "node": ">=18" },

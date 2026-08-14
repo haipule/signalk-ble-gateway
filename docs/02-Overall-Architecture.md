@@ -9,19 +9,17 @@ forwards raw payloads. A later version may execute generic GATT operations. It
 does not know Signal K paths, manufacturer protocols, device keys, or business
 rules.
 
-## Gateway protocol
+## Remote gateway protocol
 
-The gateway protocol is the firmware's only public interface. The MVP uses
-batched HTTP POST requests for advertisements. A control WebSocket is reserved
-for a later GATT phase. The protocol is versioned independently of Signal K
-internals and aligned with `dirkwa/sensesp-ble-gateway` where practical.
+The firmware uses the official Signal K remote BLE gateway protocol. The MVP
+posts advertisement batches directly to Signal K. The official gateway
+WebSocket is reserved for a later GATT phase.
 
-## Gateway provider
+## Signal K BLE infrastructure
 
-The provider is a server-side Signal K plugin. It receives gateway messages,
-tracks gateways, exposes diagnostics, and encapsulates Signal K integration.
-Migration to the official BLE Provider API must not require firmware or
-gateway-protocol changes.
+Signal K's built-in remote provider receives gateway messages, parses raw AD
+structures, registers each gateway as a BLE provider, and exposes the merged
+BLE API to consumers. This repository no longer ships a parallel provider.
 
 ## Consumer plugins
 
@@ -33,10 +31,9 @@ configuration, never in firmware.
 ## Dependency rule
 
 ```text
-Firmware -> gateway protocol <- gateway provider -> Signal K integration
-                                             \----> BLE Provider API (target)
-
-Consumer plugins -> provider consumer API -> Signal K
+Firmware -> official remote gateway protocol -> Signal K BLE Provider API
+                                                     |
+Consumer plugins <-----------------------------------+--> Signal K
 ```
 
 Consumer plugins never communicate directly with the ESP32 or HTTP transport.
