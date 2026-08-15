@@ -5,10 +5,9 @@ installation without a permanent USB monitor.
 
 ## Prerequisite
 
-Install a Signal K build containing BLE Provider API PR #2588. Until the first
-stable release containing it is known, use a separate test server or a backed
-up test installation. The consumer deliberately refuses to start without
-`app.bleApi`.
+Install Signal K Server 2.31 or newer. Earlier releases do not provide the BLE
+Provider API required by the firmware and consumer. The consumer deliberately
+refuses to start without `app.bleApi`.
 
 ## Install the Signal K consumer
 
@@ -122,9 +121,9 @@ A shorter uptime or `Brownout` reset reason fails this test.
 
 ## Upgrade and rollback
 
-Keep the working 0.1 firmware and plugins available until the stable Signal K
-release has passed the endurance test. Rollback consists of disabling the 0.2
-consumer, flashing the 0.1 firmware, and re-enabling the 0.1 gateway provider.
+Keep the working 0.1 firmware and plugins available until the 0.2 deployment
+has passed the endurance test. Rollback consists of disabling the 0.2 consumer,
+flashing the 0.1 firmware, and re-enabling the 0.1 gateway provider.
 
 ## Acceptance record
 

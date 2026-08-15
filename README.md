@@ -14,11 +14,11 @@ The ESP32 forwards raw BLE advertisements. It does not contain Victron logic,
 decryption keys, or Signal K paths. Manufacturer logic runs exclusively in
 server-side consumer plugins.
 
-## Current status: 0.2.0 migration branch
+## Current status: 0.2.0 beta
 
-This branch is prepared for the official BLE Provider API merged by Signal K
-PR #2588. The working legacy implementation remains available as
-`v0.1.0-rc.1` and on the 0.1 release line.
+This version requires Signal K Server 2.31 or newer and uses the official BLE
+Provider API delivered by PR #2588. The working legacy implementation remains
+available as `v0.1.0-rc.1` and on the 0.1 release line.
 
 - passive BLE scanning on an ESP32,
 - bounded advertisement queues and HTTP batches with retry/backoff,
@@ -63,14 +63,14 @@ implemented only when a consumer needs GATT.
 
 ## Quick start
 
-1. Install a Signal K version containing BLE Provider API PR #2588.
+1. Install Signal K Server 2.31 or newer.
 2. Install and configure `consumer-plugin/` for the Victron devices.
 3. Copy `firmware/secrets.example.h` to
    `firmware/include/secrets.h` and enter local credentials.
 4. Build and flash the ESP32 from `firmware/`.
 
-Until the BLE API reaches a stable Signal K release, use this branch only on a
-test server. Keep the `v0.1.x` installation available for rollback.
+Keep the `v0.1.x` installation available for rollback until the 0.2 firmware
+has passed the long-duration hardware test.
 
 Detailed installation and acceptance instructions are in
 [`docs/15-Operations-and-Diagnostics.md`](docs/15-Operations-and-Diagnostics.md).

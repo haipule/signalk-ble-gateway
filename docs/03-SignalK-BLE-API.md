@@ -1,7 +1,8 @@
 # Signal K BLE Provider API
 
-The BLE Provider API from PR #2588 is merged into Signal K Server `master`.
-This project uses its built-in remote gateway provider directly.
+The BLE Provider API from PR #2588 is available in Signal K Server 2.31 and
+newer. This project uses its built-in remote gateway provider directly and does
+not support earlier Signal K releases.
 
 The merged implementation includes:
 

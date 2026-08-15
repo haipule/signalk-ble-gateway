@@ -4,6 +4,8 @@ The firmware passively scans BLE advertisements and sends the unmodified raw
 data to the Signal K gateway provider in bounded batches. Manufacturer
 decoding and Signal K paths remain outside the firmware.
 
+The remote BLE gateway endpoint requires Signal K Server 2.31 or newer.
+
 ## Target board
 
 The target is the **AZ-Delivery ESP-32 Dev Kit C V4**, using PlatformIO board
@@ -32,8 +34,8 @@ pio device monitor
 ```
 
 After the initial USB flash, the status page is available through the DHCP
-hostname or reserved IP address. Install and enable `../plugin` on the Signal K
-server before expecting advertisement delivery.
+hostname or reserved IP address. Install Signal K Server 2.31 or newer and
+enable a compatible consumer plugin before expecting decoded values.
 
 ## OTA
 
