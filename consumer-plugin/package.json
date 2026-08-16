@@ -5,6 +5,14 @@
   "main": "index.js",
   "type": "commonjs",
   "engines": { "node": ">=18" },
+  "files": [
+    "index.js",
+    "lib",
+    "public",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "keywords": [
     "signalk-node-server-plugin",
     "signalk-webapp",
@@ -14,6 +22,22 @@
     "ble"
   ],
   "signalk-plugin-enabled-by-default": false,
-  "scripts": { "test": "node --test" },
+  "signalk": {
+    "displayName": "Victron BLE Consumer"
+  },
+  "scripts": {
+    "test": "node --test",
+    "prepublishOnly": "npm test"
+  },
+  "author": "haipule",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haipule/signalk-ble-gateway.git",
+    "directory": "consumer-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/haipule/signalk-ble-gateway/issues"
+  },
+  "homepage": "https://github.com/haipule/signalk-ble-gateway/tree/main/consumer-plugin#readme",
   "license": "Apache-2.0"
 }

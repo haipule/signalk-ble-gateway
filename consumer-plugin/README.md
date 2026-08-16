@@ -4,6 +4,16 @@ This standalone consumer receives generic advertisement events from the
 gateway provider, selects configured Victron devices, and decrypts Instant
 Readout data exclusively on the Signal K server.
 
+It requires Signal K Server 2.31 or newer, which provides the official BLE
+Provider API.
+
+## Installation
+
+Install `signalk-victron-ble-consumer` from the Signal K AppStore, then enable
+and configure it under **Server > Plugin Config**. This beta release is first
+published under npm's `beta` tag and may need to be installed manually until a
+stable release is promoted to `latest`.
+
 ## Development installation
 
 ```sh
