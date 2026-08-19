@@ -54,6 +54,18 @@ class AdvertisementGateway {
   uint32_t dropped() const { return dropped_.load(); }
   uint32_t post_success() const { return post_success_.load(); }
   uint32_t post_fail() const { return post_fail_.load(); }
+  uint32_t dropped_queue_full() const { return dropped_queue_full_.load(); }
+  uint32_t dropped_lock_timeout() const {
+    return dropped_lock_timeout_.load();
+  }
+  uint32_t dropped_invalid_batch() const {
+    return dropped_invalid_batch_.load();
+  }
+  int32_t last_http_status() const { return last_http_status_.load(); }
+  uint32_t last_post_duration_ms() const {
+    return last_post_duration_ms_.load();
+  }
+  uint32_t retry_interval_ms() const { return retry_interval_ms_.load(); }
   uint32_t scan_start_requests() const { return scan_start_requests_.load(); }
   uint32_t scan_start_failures() const { return scan_start_failures_.load(); }
   bool running() const { return running_.load(); }
@@ -86,8 +98,14 @@ class AdvertisementGateway {
   std::atomic<uint32_t> received_{0};
   std::atomic<uint32_t> delivered_{0};
   std::atomic<uint32_t> dropped_{0};
+  std::atomic<uint32_t> dropped_queue_full_{0};
+  std::atomic<uint32_t> dropped_lock_timeout_{0};
+  std::atomic<uint32_t> dropped_invalid_batch_{0};
   std::atomic<uint32_t> post_success_{0};
   std::atomic<uint32_t> post_fail_{0};
+  std::atomic<int32_t> last_http_status_{0};
+  std::atomic<uint32_t> last_post_duration_ms_{0};
+  std::atomic<uint32_t> retry_interval_ms_{0};
   std::atomic<uint32_t> scan_start_requests_{0};
   std::atomic<uint32_t> scan_start_failures_{0};
 };

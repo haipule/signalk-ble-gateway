@@ -43,6 +43,8 @@ constexpr uint32_t kHeartbeatIntervalMs = 30000;
 
 StatusPageItem<String> firmware_version{"Gateway firmware", FIRMWARE_VERSION,
                                         "Software", 3350};
+StatusPageItem<String> firmware_build{"Gateway build", FIRMWARE_BUILD_ID,
+                                      "Software", 3360};
 StatusPageItem<String> foundation_state{
     "Gateway phase", "advertisement MVP", "Gateway", 4000};
 StatusPageItem<String> ble_state{"BLE transport", "initializing", "Gateway",
@@ -152,6 +154,16 @@ void log_heartbeat() {
       advertisement_gateway ? advertisement_gateway->dropped() : 0;
   const size_t pending =
       advertisement_gateway ? advertisement_gateway->pending() : 0;
+  const uint32_t dropped_queue = advertisement_gateway
+                                     ? advertisement_gateway->dropped_queue_full()
+                                     : 0;
+  const uint32_t dropped_lock = advertisement_gateway
+                                    ? advertisement_gateway->dropped_lock_timeout()
+                                    : 0;
+  const uint32_t dropped_invalid =
+      advertisement_gateway
+          ? advertisement_gateway->dropped_invalid_batch()
+          : 0;
   const auto controller_status = esp_bt_controller_get_status();
   const auto host_status = esp_bluedroid_get_status();
   const uint32_t scan_requests = advertisement_gateway
@@ -176,13 +188,37 @@ void log_heartbeat() {
                 ", received=" + String(received) +
                 ", delivered=" + String(delivered) +
                 ", pending=" + String(pending) +
-                ", dropped=" + String(dropped));
+                ", dropped=" + String(dropped) +
+                ", drop_queue=" + String(dropped_queue) +
+                ", drop_lock=" + String(dropped_lock) +
+                ", drop_invalid=" + String(dropped_invalid) +
+                ", post_ok=" +
+                String(advertisement_gateway
+                           ? advertisement_gateway->post_success()
+                           : 0) +
+                ", post_fail=" +
+                String(advertisement_gateway
+                           ? advertisement_gateway->post_fail()
+                           : 0) +
+                ", http_status=" +
+                String(advertisement_gateway
+                           ? advertisement_gateway->last_http_status()
+                           : 0) +
+                ", post_ms=" +
+                String(advertisement_gateway
+                           ? advertisement_gateway->last_post_duration_ms()
+                           : 0) +
+                ", retry_ms=" +
+                String(advertisement_gateway
+                           ? advertisement_gateway->retry_interval_ms()
+                           : 0));
 
   ESP_LOGI(kLogTag,
            "alive uptime=%lus heap=%u min_heap=%u ble_scan=%d ble_hits=%u "
            "controller=%s host=%s scan_starts=%u scan_start_fail=%u token=%d "
            "received=%u delivered=%u pending=%u dropped=%u post_ok=%u "
-           "post_fail=%u",
+           "post_fail=%u drop_queue=%u drop_lock=%u drop_invalid=%u "
+           "http_status=%d post_ms=%u retry_ms=%u build=%s",
            static_cast<unsigned long>(millis() / 1000),
            static_cast<unsigned>(ESP.getFreeHeap()),
            static_cast<unsigned>(ESP.getMinFreeHeap()), scanning,
@@ -198,7 +234,21 @@ void log_heartbeat() {
                                      : 0),
            static_cast<unsigned>(advertisement_gateway
                                      ? advertisement_gateway->post_fail()
-                                     : 0));
+                                     : 0),
+           static_cast<unsigned>(dropped_queue),
+           static_cast<unsigned>(dropped_lock),
+           static_cast<unsigned>(dropped_invalid),
+           static_cast<int>(advertisement_gateway
+                                ? advertisement_gateway->last_http_status()
+                                : 0),
+           static_cast<unsigned>(
+               advertisement_gateway
+                   ? advertisement_gateway->last_post_duration_ms()
+                   : 0),
+           static_cast<unsigned>(advertisement_gateway
+                                     ? advertisement_gateway->retry_interval_ms()
+                                     : 0),
+           FIRMWARE_BUILD_ID);
 }
 
 }  // namespace

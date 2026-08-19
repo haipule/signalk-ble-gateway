@@ -1,0 +1,9 @@
+[Unit]
+Description=Signal K BLE gateway endurance sample
+After=network-online.target signalk.service
+
+[Service]
+Type=oneshot
+User=pi
+EnvironmentFile=/etc/default/ble-endurance
+ExecStart=/home/pi/signalk-ble-endurance/sample.sh

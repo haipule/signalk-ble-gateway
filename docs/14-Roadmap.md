@@ -56,7 +56,8 @@
 
 - [x] Provider outage and recovery verified.
 - [ ] At least 24 hours on stable power without reset.
-- [ ] Confirm `dropped = 0` and `scan_start_failures = 0` during that run.
+- [ ] Confirm no steady-state drop increase, categorized outage losses, and
+  `scan_start_failures = 0` during that run.
 - [x] Compare Lynx and Orion values with VictronConnect.
 - [x] Confirm Orion paths in the Signal K data browser.
 - [x] Document the installed ESP32 and Signal K server state.

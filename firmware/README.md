@@ -54,7 +54,9 @@ Do not put secrets in `platformio.ini`.
 After Wi-Fi and Signal K connect, the serial log reports a running BLE scanner.
 Accepted batches appear as `Delivered batch`. The status page reports received,
 delivered, pending, and dropped advertisement counters, together with reset and
-heap information.
+heap information. Firmware 0.2.0-beta.2 also separates queue-overflow, mutex,
+and invalid-batch drops and reports HTTP status, request duration, retry delay,
+and the Git-derived `Gateway build` identity.
 
 ## Acceptance criteria
 

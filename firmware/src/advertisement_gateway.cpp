@@ -16,6 +16,7 @@ constexpr uint32_t kHttpTimeoutMs = 5000;
 constexpr uint32_t kScanRecoveryIntervalMs = 10000;
 constexpr uint32_t kMissingTokenLogIntervalMs = 30000;
 constexpr uint32_t kHttpTaskStackSize = 6144;
+constexpr uint32_t kBacklogYieldMs = 10;
 
 String bytes_to_hex(const std::vector<uint8_t>& bytes) {
   String result;
@@ -140,11 +141,13 @@ void AdvertisementGateway::on_advertisement() {
 
   if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
     dropped_.fetch_add(1, std::memory_order_relaxed);
+    dropped_lock_timeout_.fetch_add(1, std::memory_order_relaxed);
     return;
   }
   if (pending_.size() >= config_.max_pending_advertisements) {
     pending_.erase(pending_.begin());
     dropped_.fetch_add(1, std::memory_order_relaxed);
+    dropped_queue_full_.fetch_add(1, std::memory_order_relaxed);
   }
   pending_.push_back(advertisement);
   xSemaphoreGive(mutex_);
@@ -156,6 +159,7 @@ void AdvertisementGateway::task_entry(void* argument) {
 
 void AdvertisementGateway::task_loop() {
   uint32_t retry_interval_ms = config_.post_interval_ms;
+  retry_interval_ms_.store(retry_interval_ms, std::memory_order_relaxed);
   uint32_t next_scan_recovery_ms = millis() + kScanRecoveryIntervalMs;
   uint32_t next_missing_token_log_ms = 0;
 
@@ -211,7 +215,17 @@ void AdvertisementGateway::task_loop() {
       retry_interval_ms =
           std::min(retry_interval_ms * 2, config_.max_retry_interval_ms);
     }
-    vTaskDelay(pdMS_TO_TICKS(retry_interval_ms));
+    retry_interval_ms_.store(retry_interval_ms, std::memory_order_relaxed);
+
+    // A successful request may leave a backlog behind. Drain it immediately
+    // instead of imposing the normal sampling interval after every batch.
+    // The short yield keeps the HTTP task cooperative without limiting it to
+    // one 20-advertisement batch every two seconds.
+    const uint32_t delay_ms =
+        retry_interval_ms == config_.post_interval_ms && pending() > 0
+            ? kBacklogYieldMs
+            : retry_interval_ms;
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
   }
 
   task_ = nullptr;
@@ -310,10 +324,14 @@ bool AdvertisementGateway::post_batch() {
   esp_http_client_set_header(http, "Connection", "close");
   esp_http_client_set_post_field(http, body.c_str(), body.length());
 
+  const uint32_t request_started_ms = millis();
   const esp_err_t result = esp_http_client_perform(http);
   // esp_http_client may return an error while a valid HTTP error response is
   // available (for example a 401 challenge). Preserve both diagnostics.
   const int status = esp_http_client_get_status_code(http);
+  last_http_status_.store(status, std::memory_order_relaxed);
+  last_post_duration_ms_.store(millis() - request_started_ms,
+                               std::memory_order_relaxed);
   esp_http_client_cleanup(http);
 
   if (status >= 200 && status < 300) {
@@ -336,6 +354,8 @@ bool AdvertisementGateway::post_batch() {
              static_cast<unsigned>(inflight_sequence_));
     if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
       dropped_.fetch_add(inflight_.size(), std::memory_order_relaxed);
+      dropped_invalid_batch_.fetch_add(inflight_.size(),
+                                       std::memory_order_relaxed);
       inflight_.clear();
       xSemaphoreGive(mutex_);
     }

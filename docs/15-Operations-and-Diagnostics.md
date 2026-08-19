@@ -101,12 +101,23 @@ Run at least 24 hours on stable power. At completion:
 - no brownout or unexpected reset occurred,
 - BLE remains `scanning`,
 - `scan_start_failures = 0`,
-- `dropped = 0`,
+- `dropped` does not increase while Signal K and WLAN are continuously
+  available,
+- every increase is attributable to `drop_queue`, `drop_lock`, or
+  `drop_invalid`,
 - `pending` repeatedly returns to zero or a small value,
 - `delivered` continues to follow `received`,
 - minimum heap does not trend downward.
 
-A shorter uptime or `Brownout` reset reason fails this test.
+A shorter uptime or `Brownout` reset reason fails this test. A deliberately
+bounded queue is not expected to retain every BLE observation through a long
+server or WLAN outage. Such an outage passes recovery testing only when losses
+are visible and categorized, the retained in-flight batch is retried, and the
+queue drains after connectivity returns. Do not combine those expected outage
+losses with the steady-state zero-drop criterion.
+
+Record `Gateway build` as well as the semantic firmware version. A version
+without a source revision is insufficient acceptance evidence.
 
 ## Server outage test
 
