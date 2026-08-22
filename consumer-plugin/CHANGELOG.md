@@ -5,6 +5,9 @@
 - Promote the official Signal K BLE Provider API consumer to stable after the
   completed long-duration gateway acceptance test.
 - Confirm stable operation on Signal K Server 2.31 or newer.
+- Published to npm on 2026-08-22 via GitHub Actions Trusted Publishing from
+  tag `v0.2.0` (workflow run `32600878628`, attempt 2).
+- npm package shasum: `272adee08a5d78c153e3ff31eee13e31d3ea48a0`.
 
 ## 0.2.0-beta.1
 

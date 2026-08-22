@@ -44,3 +44,10 @@ After the observation, `ble-endurance.timer` and the service were stopped; the
 timer was disabled. The JSONL files were retained in the compressed acceptance
 archive on the Raspberry Pi.
 
+## Release record
+
+Consumer package `signalk-victron-ble-consumer@0.2.0` was published
+successfully on 2026-08-22T22:03:52.333Z from GitHub Actions via npm Trusted
+Publishing. It was triggered by tag `v0.2.0`, workflow run `32600878628`,
+attempt 2. npm reported shasum
+`272adee08a5d78c153e3ff31eee13e31d3ea48a0`.
