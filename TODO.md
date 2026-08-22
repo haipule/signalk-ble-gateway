@@ -1,6 +1,6 @@
 # Local TODO
 
-This file is a local working note. Do not commit or publish it yet.
+This file tracks the remaining roadmap and release work.
 
 ## Priority 1: Restore both gateways
 
@@ -50,12 +50,30 @@ This file is a local working note. Do not commit or publish it yet.
 - Add the stable GitHub release and final changelog entry.
 - Point npm `latest` deliberately at the stable version.
 
-## Priority 7: Announce the project
+## Priority 7: Expand Victron BLE coverage deliberately
+
+- [ ] Add support incrementally by device family, starting with SmartSolar
+  MPPT, SmartShunt/BMV, Orion XS/Orion-Tr, Smart Battery Sense, and Smart
+  LiFePO4 products.
+- [ ] Separate Instant Readout advertisement support from connection-oriented
+  GATT support; do not claim support without the required transport and key.
+- [ ] Collect real advertisements, device keys, and VictronConnect reference
+  values before implementing each parser.
+- [ ] Add fixture-driven parser tests for every supported device family.
+- [ ] Keep unsupported families explicitly documented rather than guessing
+  field mappings without hardware validation.
+
+## Priority 8: Announce the project
 
 - Improve the short installation path, architecture graphic, and screenshots.
 - Announce it to the Signal K and SenseESP communities.
 - Present the gateway as generic BLE transport and the Victron decoder as a
   separate server-side consumer.
+- [ ] Prepare a concise project announcement with npm, GitHub, installation,
+  supported devices, and the 0.2.0 endurance acceptance record.
+- [ ] Publish a short demo or screenshot showing decoded Victron values in
+  Signal K.
+- [ ] Ask early users for additional device captures and test reports.
 
 ## Later work
 
