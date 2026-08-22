@@ -1,0 +1,32 @@
+name: Publish Victron consumer
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Run consumer tests
+        working-directory: consumer-plugin
+        run: npm test
+
+      - name: Publish stable package
+        working-directory: consumer-plugin
+        run: npm publish --access public --provenance

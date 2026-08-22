@@ -136,6 +136,22 @@ Keep the working 0.1 firmware and plugins available until the 0.2 deployment
 has passed the endurance test. Rollback consists of disabling the 0.2 consumer,
 flashing the 0.1 firmware, and re-enabling the 0.1 gateway provider.
 
+## npm publication
+
+The stable consumer is published by GitHub Actions from a release tag matching
+`vMAJOR.MINOR.PATCH`. The workflow runs the consumer tests and publishes
+`consumer-plugin/` with npm provenance. Before the first publication, configure
+the npm package's Trusted Publisher for this GitHub repository and the
+`publish-consumer.yml` workflow. No long-lived npm token is stored in GitHub.
+
+To publish version `0.2.0`, push the matching tag after committing the version
+change:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
 ## Acceptance record
 
 Record date, firmware version, plugin commit, gateway ID, supply, duration,
