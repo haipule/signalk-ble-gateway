@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- Promote the official Signal K BLE Provider API consumer to stable after the
+  completed long-duration gateway acceptance test.
+- Confirm stable operation on Signal K Server 2.31 or newer.
+
 ## 0.2.0-beta.1
 
 - Subscribe to the official Signal K BLE Provider API introduced in Signal K

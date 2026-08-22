@@ -10,9 +10,8 @@ Provider API.
 ## Installation
 
 Install `signalk-victron-ble-consumer` from the Signal K AppStore, then enable
-and configure it under **Server > Plugin Config**. This beta release is first
-published under npm's `beta` tag and may need to be installed manually until a
-stable release is promoted to `latest`.
+and configure it under **Server > Plugin Config**. Version 0.2.0 is the stable
+release for the official Signal K BLE Provider API.
 
 ## Development installation
 

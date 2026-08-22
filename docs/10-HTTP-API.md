@@ -17,7 +17,7 @@ prepared against Signal K commit
 ```json
 {
   "gateway_id": "engine-room-stbd",
-  "firmware": "0.2.0-beta.1",
+  "firmware": "0.2.0",
   "mac": "AA:BB:CC:DD:EE:FF",
   "hostname": "engine-room-stbd",
   "uptime": 123,

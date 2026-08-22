@@ -14,7 +14,7 @@ The ESP32 forwards raw BLE advertisements. It does not contain Victron logic,
 decryption keys, or Signal K paths. Manufacturer logic runs exclusively in
 server-side consumer plugins.
 
-## Current status: 0.2.0 beta
+## Current status: 0.2.0 stable
 
 This version requires Signal K Server 2.31 or newer and uses the official BLE
 Provider API delivered by PR #2588. The working legacy implementation remains
@@ -48,9 +48,11 @@ electrical.chargers.<device-id>.inputVoltage
 electrical.chargers.<device-id>.inputCurrent
 ```
 
-The remaining release gate is a long-duration hardware run with stable power.
-A previously observed brownout was a supply reset, not a firmware stability
-failure and not a successful endurance test.
+The 0.2.0 release passed a 90-hour endurance run on stable power. The
+acceptance record is in
+[`docs/test-record-2026-08-22.md`](docs/test-record-2026-08-22.md). A
+previously observed brownout was a supply reset, not a firmware stability
+failure.
 
 GATT remains outside the advertisement MVP. The gateway WebSocket will be
 implemented only when a consumer needs GATT.
