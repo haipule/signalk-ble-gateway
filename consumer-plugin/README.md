@@ -7,6 +7,12 @@ Readout data exclusively on the Signal K server.
 It requires Signal K Server 2.31 or newer, which provides the official BLE
 Provider API.
 
+This consumer is designed for the new Signal K BLE Provider API. It receives
+Victron advertisements through `app.bleApi`, including advertisements supplied
+by remote ESP32 gateways, instead of opening a local BlueZ adapter itself. This
+allows several consumers to share one BLE stream and supports coverage across
+multiple vessel compartments.
+
 ## Installation
 
 Install `signalk-victron-ble-consumer` from the Signal K AppStore, then enable

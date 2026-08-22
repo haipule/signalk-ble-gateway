@@ -20,6 +20,20 @@ This version requires Signal K Server 2.31 or newer and uses the official BLE
 Provider API delivered by PR #2588. The working legacy implementation remains
 available as `v0.1.0-rc.1` and on the 0.1 release line.
 
+## Why this project is different
+
+This is a Victron consumer for Signal K's new BLE Provider API and distributed
+ESP32 BLE gateways. The consumer subscribes to `app.bleApi` advertisements; it
+does not open a local BlueZ adapter, scan `hci0`, or compete with other BLE
+plugins for hardware access. Gateways can be placed in separate engine rooms,
+cabins, or other areas of a vessel while Signal K receives one unified stream.
+
+The project is therefore complementary to direct local-BLE Victron plugins:
+it focuses on remote, multi-gateway coverage and clean separation between BLE
+transport and Victron decoding. At the time of the 0.2.0 release, this is one
+of the first publicly documented Victron consumers built specifically around
+the new Signal K BLE Provider API.
+
 - passive BLE scanning on an ESP32,
 - bounded advertisement queues and HTTP batches with retry/backoff,
 - authenticated batches to Signal K's built-in remote BLE provider,
