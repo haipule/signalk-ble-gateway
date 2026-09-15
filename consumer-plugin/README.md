@@ -17,16 +17,17 @@ multiple vessel compartments.
 ## Installation
 
 Install `signalk-victron-ble-consumer` from the Signal K AppStore, then enable
-and configure it under **Server > Plugin Config**. The MPPT test build is
-`0.2.2-mppt.0`; it is a development build and is not yet an AppStore release.
+and configure it under **Server > Plugin Config**. The current stable release
+is `0.2.2` and includes SmartSolar MPPT and Orion Smart DC-DC support. The
+additional specification-based Victron record decoders are explicitly marked
+as untested in the supported-device table below.
 
-To test the MPPT build directly on a Signal K server, install from the
-`consumer-plugin` directory of a checkout. The package manifest lives there,
-not at the repository root, so a branch archive URL cannot be installed
-directly.
+To install the released source directly on a Signal K server, use the
+`consumer-plugin` directory from the upstream repository tag. The package
+manifest lives there, not at the repository root.
 
 ```sh
-git clone -b feat/victron-mppt-support https://github.com/dirkwa/signalk-ble-gateway.git
+git clone -b v0.2.2 https://github.com/haipule/signalk-ble-gateway.git
 cd ~/.signalk
 npm install /path/to/signalk-ble-gateway/consumer-plugin
 ```
