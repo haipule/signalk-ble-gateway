@@ -60,6 +60,8 @@ This file tracks the remaining roadmap and release work.
 
 ## Priority 8: Expand Victron BLE coverage deliberately
 
+- [ ] Integrate our four Victron Smart Batteries and use them for local BLE
+  decoder validation.
 - [ ] Add support incrementally by device family, starting with SmartSolar
   MPPT, SmartShunt/BMV, Orion XS/Orion-Tr, Smart Battery Sense, and Smart
   LiFePO4 products.
