@@ -38,19 +38,27 @@ This file tracks the remaining roadmap and release work.
 - Confirm `scan_start_failures = 0` and no unexpected restart or brownout.
 - Save a final acceptance record for each gateway.
 
-## Priority 5: Stabilize the 0.2 release
+## Priority 5: Detect and notify gateway outages
+
+- [ ] Detect when an expected gateway stops checking in or delivering BLE
+  advertisements, with a configurable timeout and per-gateway state.
+- [ ] Expose gateway health and the last-seen timestamp in diagnostics.
+- [ ] Emit a Signal K notification when a gateway goes offline and when it
+  recovers, without generating repeated notifications for the same outage.
+
+## Priority 6: Stabilize the 0.2 release
 
 - Validate the complete setup against Signal K Server 2.31.
 - Add an automated multi-gateway integration test.
 - Reconcile the roadmap and release-gate wording with the 0.2 version line.
 
-## Priority 6: Promote the consumer from beta
+## Priority 7: Promote the consumer from beta
 
 - Publish `signalk-victron-ble-consumer@0.2.0` after endurance acceptance.
 - Add the stable GitHub release and final changelog entry.
 - Point npm `latest` deliberately at the stable version.
 
-## Priority 7: Expand Victron BLE coverage deliberately
+## Priority 8: Expand Victron BLE coverage deliberately
 
 - [ ] Add support incrementally by device family, starting with SmartSolar
   MPPT, SmartShunt/BMV, Orion XS/Orion-Tr, Smart Battery Sense, and Smart
@@ -63,7 +71,7 @@ This file tracks the remaining roadmap and release work.
 - [ ] Keep unsupported families explicitly documented rather than guessing
   field mappings without hardware validation.
 
-## Priority 8: Announce the project
+## Priority 9: Announce the project
 
 - Improve the short installation path, architecture graphic, and screenshots.
 - Announce it to the Signal K and SenseESP communities.

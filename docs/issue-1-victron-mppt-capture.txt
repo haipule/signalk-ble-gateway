@@ -1,0 +1,47 @@
+Source: GitHub issue #1, provided by zweistein22
+Device: SmartSolar Charger MPPT 150/35
+Model ID: 0xa058
+Record type: 0x01 (solar_charger)
+
+The Python tool discovers these devices:
+
+MPPT-1  SmartSolar HQ24106TH2U
+MPPT-2  SmartSolar HQ2410AXUYX
+MPPT-3  SmartSolar HQ2410YTNFJ
+
+Raw advertisements for MPPT-1:
+
+100258a001d3c9886031ae890b6296ac09a442c6
+100258a001d4c98865958c5c918123a920150c03
+100258a001d5c988052ee77f5cfd3b263e0fa595
+100258a001d6c988fc3cf257d4dd520be14656d0
+100258a001d7c988da3b24d7caa4cff7a6249609
+100258a001d8c988a16713ce69082c8fd7eb7c87
+100258a001d9c98847d7deaef77d10ad536ad68e
+100258a001dac9880fb83b8104d738188d4780c6
+100258a001dbc9887cddcdc2eaeb51e30739343e
+100258a001dcc988bf0c82e7e91b3bd822932525
+100258a001ddc988dad7e81fe45c235e2ec6e22e
+100258a001dec98892aefbcea8f9a16ea9409942
+100258a001e0c9880140f89db63b4f318219aa0a
+100258a001e1c9884cc08863ac5de66c61873973
+100258a001e2c9880e0d3e210fcf96b3f5cc39e7
+100258a001e3c98816748b76e7ae8bb3327bcdef
+100258a001e4c9888860e73615e2b55ef2b51b13
+100258a001e5c988121898e4ed3182b57e86e61c
+100258a001e6c988518364b66d14eb696ac51bdf
+
+Decoded values reported by victron-ble read:
+
+name: SmartSolar HQ24106TH2U
+address: masked
+model_name: SmartSolar Charger MPPT 150/35
+charge_state: float
+charger_error: no_error
+battery_voltage: 13.48-13.50 V
+battery_charging_current: 2.8-3.7 A
+solar_power: 40-52 W
+yield_today: 930
+
+This is a real-device capture for decoder development. The raw payloads are
+encrypted Victron advertisements; do not add device keys to this file.
