@@ -24,7 +24,7 @@
 - Provide a protected diagnostic web application without exposing encryption
   keys.
 
-## 0.2.2-mppt.0
+## 0.2.2
 
 - Add SmartSolar MPPT Instant Readout support (record type `0x01`), decoded to
   the published Victron "Extra manufacturer data" specification and verified
