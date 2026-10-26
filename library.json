@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "signalk-remote-ble-gateway",
+  "version": "0.1.0-dev",
+  "description": "Generic ESP32 remote BLE advertisement gateway transport for Signal K",
+  "keywords": [
+    "signalk",
+    "ble",
+    "esp32",
+    "gateway"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haipule/signalk-ble-gateway.git"
+  },
+  "license": "Apache-2.0",
+  "frameworks": [
+    "arduino",
+    "espidf"
+  ],
+  "platforms": [
+    "espressif32"
+  ],
+  "headers": [
+    "signalk_remote_ble_gateway/version.h"
+  ],
+  "build": {
+    "includeDir": "gateway-library/include",
+    "srcDir": "gateway-library/src"
+  },
+  "export": {
+    "include": [
+      "gateway-library/include/*",
+      "gateway-library/src/*",
+      "docs/ADR/ADR-007-Reusable-Gateway-Library.md",
+      "LICENSE",
+      "README.md"
+    ]
+  }
+}

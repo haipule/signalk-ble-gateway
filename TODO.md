@@ -7,14 +7,16 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: deployed baseline confirmed; implementation not started.
+- Status: Phase 1 package and interface design complete; production source
+  extraction not started.
 - Last reviewed: 2026-10-25.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: write the library-boundary ADR, then run the local
-  PlatformIO packaging spike without changing either integration repository.
+- Next exact action: begin Phase 2 by bringing the generic allowlist behavior
+  into the source of truth, then move the existing transport behind the agreed
+  public library boundary and convert the standalone firmware locally.
 - Current blocker: none for ADR, packaging, tests, or local builds. Onboard
   deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not
@@ -52,19 +54,22 @@ Evidence: `docs/deployed-gateway-baseline-2026-10-25.md`.
 
 ### Phase 1: Package and interface design
 
-- [ ] Add an ADR defining library ownership, dependency direction, Bluetooth
+- [x] Add an ADR defining library ownership, dependency direction, Bluetooth
   lifecycle, versioning, and the migration boundary.
-- [ ] Choose a distinct package name that cannot be confused with
+- [x] Choose a distinct package name that cannot be confused with
   `dirkwa/sensesp-ble-gateway`; preferred working name:
   `signalk-remote-ble-gateway`.
-- [ ] Prove with a minimal PlatformIO packaging spike that this repository can
+- [x] Prove with a minimal PlatformIO packaging spike that this repository can
   be consumed through `lib_deps` while retaining the npm consumer and
   standalone firmware.
-- [ ] Define the smallest public configuration and diagnostics interfaces.
-- [ ] Define separate tag namespaces for the npm consumer and gateway library
+- [x] Define the smallest public configuration and diagnostics interfaces.
+- [x] Define separate tag namespaces for the npm consumer and gateway library
   so a library tag cannot trigger npm publication.
-- [ ] Document the dependency chain: upstream BLE abstraction -> remote gateway
+- [x] Document the dependency chain: upstream BLE abstraction -> remote gateway
   library -> standalone or onboard application.
+
+Evidence: `docs/ADR/ADR-007-Reusable-Gateway-Library.md` and
+`docs/gateway-library-packaging-spike-2026-10-25.md`.
 
 ### Phase 2: Extract without changing behavior
 
