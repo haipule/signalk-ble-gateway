@@ -7,16 +7,16 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: Phase 1 package and interface design complete; production source
-  extraction not started.
-- Last reviewed: 2026-10-25.
+- Status: Phase 2 extraction implemented on
+  `codex/extract-gateway-library`; standalone build verification pending.
+- Last reviewed: 2026-10-26.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: begin Phase 2 by bringing the generic allowlist behavior
-  into the source of truth, then move the existing transport behind the agreed
-  public library boundary and convert the standalone firmware locally.
+- Next exact action: build the standalone ESP32 target, fix any extraction
+  regressions, then add focused allowlist/configuration tests before marking
+  Phase 2 items complete.
 - Current blocker: none for ADR, packaging, tests, or local builds. Onboard
   deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not

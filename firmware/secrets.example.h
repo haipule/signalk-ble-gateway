@@ -16,6 +16,10 @@
 // This can be omitted when the SenseESP WebSocket client has a suitable token.
 #define GATEWAY_PROVIDER_TOKEN "YOUR_SIGNAL_K_BEARER_TOKEN"
 
+// Initial comma-separated BLE MAC allowlist. Empty means receive all. After
+// first boot the value is managed through the authenticated SenseESP UI.
+#define GATEWAY_BLE_MAC_ALLOWLIST ""
+
 #define OTA_PASSWORD "my_ota_PASSWORD"
 
 // Local SenseESP web interface credentials. Use credentials different from

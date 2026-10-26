@@ -1,4 +1,4 @@
-#include "advertisement_gateway.h"
+#include "signalk_remote_ble_gateway/advertisement_gateway.h"
 
 #include <ArduinoJson.h>
 #include <esp_http_client.h>
@@ -40,6 +40,13 @@ const char* address_type_name(const uint8_t address_type) {
   }
 }
 
+String normalize_mac(String address) {
+  address.trim();
+  address.replace('-', ':');
+  address.toUpperCase();
+  return address;
+}
+
 }  // namespace
 
 AdvertisementGateway::AdvertisementGateway(
@@ -49,9 +56,35 @@ AdvertisementGateway::AdvertisementGateway(
     : ble_(std::move(ble)),
       signalk_client_(std::move(signalk_client)),
       config_(std::move(config)) {
+  for (String& address : config_.allowed_macs) {
+    address = normalize_mac(address);
+  }
   mutex_ = xSemaphoreCreateMutex();
   pending_.reserve(config_.max_pending_advertisements);
   inflight_.reserve(config_.max_batch_size);
+}
+
+AdvertisementGatewayDiagnostics AdvertisementGateway::diagnostics() const {
+  AdvertisementGatewayDiagnostics result;
+  result.running = running();
+  result.scanning = ble_ && ble_->is_scanning();
+  result.token_available = token_available();
+  result.received = received();
+  result.delivered = delivered();
+  result.dropped = dropped();
+  result.filtered = filtered();
+  result.post_success = post_success();
+  result.post_fail = post_fail();
+  result.dropped_queue_full = dropped_queue_full();
+  result.dropped_lock_timeout = dropped_lock_timeout();
+  result.dropped_invalid_batch = dropped_invalid_batch();
+  result.last_http_status = last_http_status();
+  result.last_post_duration_ms = last_post_duration_ms();
+  result.retry_interval_ms = retry_interval_ms();
+  result.scan_start_requests = scan_start_requests();
+  result.scan_start_failures = scan_start_failures();
+  result.pending = pending();
+  return result;
 }
 
 AdvertisementGateway::~AdvertisementGateway() {
@@ -138,6 +171,10 @@ void AdvertisementGateway::on_advertisement() {
   }
   received_.fetch_add(1, std::memory_order_relaxed);
   const sensesp::BLEAdvertisement advertisement = ble_->get();
+  if (!is_allowed(advertisement.address)) {
+    filtered_.fetch_add(1, std::memory_order_relaxed);
+    return;
+  }
 
   if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
     dropped_.fetch_add(1, std::memory_order_relaxed);
@@ -151,6 +188,15 @@ void AdvertisementGateway::on_advertisement() {
   }
   pending_.push_back(advertisement);
   xSemaphoreGive(mutex_);
+}
+
+bool AdvertisementGateway::is_allowed(const String& address) const {
+  if (config_.allowed_macs.empty()) {
+    return true;
+  }
+  const String normalized = normalize_mac(address);
+  return std::find(config_.allowed_macs.begin(), config_.allowed_macs.end(),
+                   normalized) != config_.allowed_macs.end();
 }
 
 void AdvertisementGateway::task_entry(void* argument) {

@@ -15,12 +15,14 @@
 
 #include <memory>
 
-#include "advertisement_gateway.h"
 #include "secrets.h"
 #include "sensesp.h"
 #include "sensesp_app_builder.h"
 #include "sensesp/ui/status_page_item.h"
 #include "sensesp_ble_gateway/native_bluedroid_ble.h"
+#include "signalk_remote_ble_gateway/advertisement_gateway.h"
+#include "signalk_remote_ble_gateway/ble_allowlist_config.h"
+#include "signalk_remote_ble_gateway/version.h"
 
 using namespace sensesp;
 
@@ -45,10 +47,14 @@ StatusPageItem<String> firmware_version{"Gateway firmware", FIRMWARE_VERSION,
                                         "Software", 3350};
 StatusPageItem<String> firmware_build{"Gateway build", FIRMWARE_BUILD_ID,
                                       "Software", 3360};
+StatusPageItem<String> gateway_library_version{
+    "Gateway library", signalk_remote_ble_gateway::kVersion, "Software", 3370};
 StatusPageItem<String> foundation_state{
     "Gateway phase", "advertisement MVP", "Gateway", 4000};
 StatusPageItem<String> ble_state{"BLE transport", "initializing", "Gateway",
                                  4010};
+StatusPageItem<String> ble_allowlist_state{"BLE MAC allowlist", "initializing",
+                                           "Gateway", 4020};
 
 std::shared_ptr<NativeBLE> ble;
 std::shared_ptr<gateway::AdvertisementGateway> advertisement_gateway;
@@ -152,6 +158,8 @@ void log_heartbeat() {
       advertisement_gateway ? advertisement_gateway->delivered() : 0;
   const uint32_t dropped =
       advertisement_gateway ? advertisement_gateway->dropped() : 0;
+  const uint32_t filtered =
+      advertisement_gateway ? advertisement_gateway->filtered() : 0;
   const size_t pending =
       advertisement_gateway ? advertisement_gateway->pending() : 0;
   const uint32_t dropped_queue = advertisement_gateway
@@ -189,6 +197,7 @@ void log_heartbeat() {
                 ", delivered=" + String(delivered) +
                 ", pending=" + String(pending) +
                 ", dropped=" + String(dropped) +
+                ", filtered=" + String(filtered) +
                 ", drop_queue=" + String(dropped_queue) +
                 ", drop_lock=" + String(dropped_lock) +
                 ", drop_invalid=" + String(dropped_invalid) +
@@ -216,7 +225,7 @@ void log_heartbeat() {
   ESP_LOGI(kLogTag,
            "alive uptime=%lus heap=%u min_heap=%u ble_scan=%d ble_hits=%u "
            "controller=%s host=%s scan_starts=%u scan_start_fail=%u token=%d "
-           "received=%u delivered=%u pending=%u dropped=%u post_ok=%u "
+           "received=%u delivered=%u pending=%u dropped=%u filtered=%u post_ok=%u "
            "post_fail=%u drop_queue=%u drop_lock=%u drop_invalid=%u "
            "http_status=%d post_ms=%u retry_ms=%u build=%s",
            static_cast<unsigned long>(millis() / 1000),
@@ -229,6 +238,7 @@ void log_heartbeat() {
            static_cast<unsigned>(received),
            static_cast<unsigned>(delivered), static_cast<unsigned>(pending),
            static_cast<unsigned>(dropped),
+           static_cast<unsigned>(filtered),
            static_cast<unsigned>(advertisement_gateway
                                      ? advertisement_gateway->post_success()
                                      : 0),
@@ -296,6 +306,24 @@ void setup() {
 #ifdef GATEWAY_PROVIDER_TOKEN
   gateway_config.provider_token = GATEWAY_PROVIDER_TOKEN;
 #endif
+  const String compiled_allowlist =
+#ifdef GATEWAY_BLE_MAC_ALLOWLIST
+      GATEWAY_BLE_MAC_ALLOWLIST;
+#else
+      "";
+#endif
+  auto allowlist_config = std::make_shared<gateway::BleAllowlistConfig>(
+      compiled_allowlist, "/gateway/bleMacAllowlist");
+  ConfigItem(allowlist_config)
+      ->set_title("BLE MAC allowlist")
+      ->set_description(
+          "Comma-separated MAC addresses. Empty allows all devices. "
+          "Changes take effect after restart.")
+      ->set_sort_order(4050);
+  gateway_config.allowed_macs = allowlist_config->allowed_macs();
+  ble_allowlist_state.set(allowlist_config->value().isEmpty()
+                              ? "all devices allowed"
+                              : allowlist_config->value());
   advertisement_gateway = std::make_shared<gateway::AdvertisementGateway>(
       ble, app->get_ws_client(), gateway_config);
   if (!advertisement_gateway->start()) {
