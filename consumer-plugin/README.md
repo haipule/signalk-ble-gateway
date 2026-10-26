@@ -148,10 +148,14 @@ The battery monitor and DC energy meter records carry a 16-bit auxiliary field
 whose meaning depends on a 2-bit selector stored after it: starter voltage,
 mid-point voltage, or temperature. Only the selected reading is returned; the
 others are null, because the same bits mean different things per device
-configuration. Starter and mid-point voltage have no Signal K leaf, so they
-appear in the status API only. The DC energy meter has no mid-point reading,
-so that selector is rejected for it rather than producing a value the record
-does not carry.
+configuration. Mid-point voltage has no Signal K leaf and remains available in
+the status API only. For a BMV or SmartShunt whose auxiliary input measures a
+separate starter battery, set the optional **Secondary battery ID** on that
+device. An auxiliary voltage is then published as
+`electrical.batteries.<secondary-id>.voltage`; temperature and mid-point modes
+never use this mapping. Leave the option empty to retain the default behavior.
+The DC energy meter has no mid-point reading, so that selector is rejected for
+it rather than producing a value the record does not carry.
 
 SmartLithium cell voltages are reported as a bound and a voltage, because the
 specification defines the two end values as thresholds rather than

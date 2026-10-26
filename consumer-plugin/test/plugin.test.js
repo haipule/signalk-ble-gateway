@@ -197,3 +197,61 @@ test('publishes nothing for a record type without a path builder', () => {
 
   assert.deepEqual(delta.updates[0].values, [])
 })
+
+test('optionally publishes BMV auxiliary voltage as a secondary battery', () => {
+  const delta = measurementDelta({ id: 'house', secondaryBattery: 'starter' }, {
+    record_type: 0x02,
+    measurements: {
+      battery_voltage_v: 12.8,
+      aux_input: 'aux_voltage',
+      aux_voltage_v: 12.6
+    }
+  })
+
+  assert.deepEqual(delta.updates[0].values, [
+    { path: 'electrical.batteries.house.voltage', value: 12.8 },
+    { path: 'electrical.batteries.starter.voltage', value: 12.6 }
+  ])
+})
+
+test('does not publish a secondary battery without its optional ID', () => {
+  const delta = measurementDelta({ id: 'house' }, {
+    record_type: 0x02,
+    measurements: {
+      battery_voltage_v: 12.8,
+      aux_input: 'aux_voltage',
+      aux_voltage_v: 12.6
+    }
+  })
+
+  assert.deepEqual(delta.updates[0].values, [
+    { path: 'electrical.batteries.house.voltage', value: 12.8 }
+  ])
+})
+
+test('does not map other BMV auxiliary modes to a secondary battery', () => {
+  const delta = measurementDelta({ id: 'house', secondaryBattery: 'starter' }, {
+    record_type: 0x02,
+    measurements: {
+      aux_input: 'temperature',
+      aux_voltage_v: 12.6,
+      temperature_k: 295.15
+    }
+  })
+
+  assert.deepEqual(delta.updates[0].values, [
+    { path: 'electrical.batteries.house.temperature', value: 295.15 }
+  ])
+})
+
+test('does not publish a secondary battery when auxiliary voltage is unavailable', () => {
+  const delta = measurementDelta({ id: 'house', secondaryBattery: 'starter' }, {
+    record_type: 0x02,
+    measurements: {
+      aux_input: 'aux_voltage',
+      aux_voltage_v: null
+    }
+  })
+
+  assert.deepEqual(delta.updates[0].values, [])
+})

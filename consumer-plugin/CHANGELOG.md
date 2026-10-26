@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an optional secondary battery ID for publishing a BMV or SmartShunt
+  auxiliary starter-battery voltage on a standard Signal K battery path.
 - Skip manufacturer records that are not Instant Readout (a leading byte other
   than 0x10, such as the VE.Smart Networking beacons a SmartShunt interleaves
   with its readings) instead of reporting them as decode errors.
