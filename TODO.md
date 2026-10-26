@@ -1,88 +1,61 @@
 # Local TODO
 
-This file tracks the remaining roadmap and release work.
+This file tracks work that remains after the stable 0.2 release line. Completed
+release evidence is retained in `docs/test-record-2026-08-22.md` and the
+changelog rather than repeated here as open work.
 
-## Priority 1: Restore both gateways
+## Priority 1: Confirm current gateway operations
 
-- Check the shared external power supply and WLAN/access point.
-- Record the cause and duration of the simultaneous outage that began around
-  2026-08-15 22:35 local time.
-- Avoid reflashing before the reset reason and surrounding evidence have been
-  collected where possible.
+- [ ] Confirm that both installed gateways, their shared external power supply,
+  and the WLAN/access point are currently available.
+- [ ] Close the historical outage record for the simultaneous outage that began
+  around 2026-08-15 22:35 local time. Record the cause when evidence still
+  exists; otherwise mark it explicitly as unknown.
 
-## Priority 2: Complete endurance testing
+The later 90.8-hour stable-power endurance run passed for both gateways. It
+does not by itself establish the cause of the earlier shared outage.
 
-- Restore or restart the temporary Raspberry Pi logger.
-- Run at least 24 hours, preferably 72 hours, on stable external power.
-- Record uptime, reset reason, free/minimum heap, Wi-Fi RSSI, BLE scan state,
-  Signal K connection, provider count, device observations, queue state, and
-  delivery counters.
-- Confirm automatic recovery after temporary WLAN or Signal K interruption.
+## Priority 2: Detect and notify gateway outages
 
-## Priority 3: Investigate dropped advertisements
-
-- [x] Explain the dominant non-zero `dropped` counters: 93--97% of new drops
-  accumulated during the shared 92-minute outage and bounded-queue overflow.
-- [x] Measure the increase and correlate it with queue pressure. Remaining
-  short spikes affect the higher-rate starboard gateway more strongly.
-- [x] Remove the artificial one-batch-per-two-seconds backlog limit while
-  retaining bounded memory.
-- [x] Split queue, lock-timeout, and invalid-batch drop diagnostics.
-- [x] Define zero drops for steady connected operation; long intentional
-  outages must instead have categorized, bounded losses and clean recovery.
-
-## Priority 4: Finish outage and recovery acceptance
-
-- Verify that `pending` returns to zero or a small value after recovery.
-- Verify that delivery resumes without incorrect or duplicated Signal K state.
-- Confirm `scan_start_failures = 0` and no unexpected restart or brownout.
-- Save a final acceptance record for each gateway.
-
-## Priority 5: Detect and notify gateway outages
-
+- [ ] Decide, without duplicating the official provider, which Signal K BLE API
+  surface owns gateway liveness and exposes the required observations.
 - [ ] Detect when an expected gateway stops checking in or delivering BLE
   advertisements, with a configurable timeout and per-gateway state.
 - [ ] Expose gateway health and the last-seen timestamp in diagnostics.
 - [ ] Emit a Signal K notification when a gateway goes offline and when it
   recovers, without generating repeated notifications for the same outage.
 
-## Priority 6: Stabilize the 0.2 release
+## Priority 3: Complete automated integration coverage
 
-- Validate the complete setup against Signal K Server 2.31.
-- Add an automated multi-gateway integration test.
-- Reconcile the roadmap and release-gate wording with the 0.2 version line.
+- [x] Run the consumer test suite for pushes to `main` and pull requests.
+- [ ] Add an automated integration test with multiple simulated or physical
+  gateways.
+- [ ] Extend automated outage, recovery, and endurance tests where the official
+  provider offers a stable test surface.
 
-## Priority 7: Promote the consumer from beta
+## Priority 4: Expand Victron BLE coverage deliberately
 
-- Publish `signalk-victron-ble-consumer@0.2.0` after endurance acceptance.
-- Add the stable GitHub release and final changelog entry.
-- Point npm `latest` deliberately at the stable version.
-
-## Priority 8: Expand Victron BLE coverage deliberately
-
-- [ ] Integrate our four Victron Smart Batteries and use them for local BLE
-  decoder validation.
-- [ ] Add support incrementally by device family, starting with SmartSolar
-  MPPT, SmartShunt/BMV, Orion XS/Orion-Tr, Smart Battery Sense, and Smart
-  LiFePO4 products.
-- [ ] Separate Instant Readout advertisement support from connection-oriented
-  GATT support; do not claim support without the required transport and key.
+- [ ] Integrate the four available Victron Smart Batteries and use them for
+  local decoder validation.
+- [ ] Complete hardware validation for specification-derived SmartShunt/BMV,
+  Smart Battery Sense, SmartLithium, inverter, and diagnostic-only records.
+- [ ] Complete AC Charger (`0x08`) validation before adding support; track the
+  real-device work in GitHub issue #6.
+- [ ] Keep Instant Readout advertisement support separate from connection-
+  oriented GATT support; do not claim support without the required transport
+  and key.
 - [ ] Collect real advertisements, device keys, and VictronConnect reference
-  values before implementing each parser.
-- [ ] Add fixture-driven parser tests for every supported device family.
-- [ ] Keep unsupported families explicitly documented rather than guessing
-  field mappings without hardware validation.
+  values before declaring each parser supported.
+- [ ] Keep fixture-driven tests for every implemented family and document
+  unsupported or hardware-unverified families explicitly.
 
-## Priority 9: Announce the project
+## Priority 5: Finish release presentation
 
-- Improve the short installation path, architecture graphic, and screenshots.
-- Announce it to the Signal K and SenseESP communities.
-- Present the gateway as generic BLE transport and the Victron decoder as a
-  separate server-side consumer.
-- [ ] Prepare a concise project announcement with npm, GitHub, installation,
-  supported devices, and the 0.2.0 endurance acceptance record.
-- [ ] Publish a short demo or screenshot showing decoded Victron values in
-  Signal K.
+- [ ] Create the GitHub release for `v0.2.2` and mark it as the current stable
+  release.
+- [ ] Improve the architecture graphic and add a short screenshot or demo of
+  decoded Victron values in Signal K.
+- [ ] Publish the updated announcement to the Signal K and SenseESP communities.
 - [ ] Ask early users for additional device captures and test reports.
 
 ## Later work
@@ -90,9 +63,9 @@ This file tracks the remaining roadmap and release work.
 - GATT prototype and resource measurements.
 - Gateway selection, claims, and failover.
 - Additional manufacturer consumers.
-- Extended automated endurance testing.
 
 ## Administrative cleanup
 
-- Delete the private GitHub archive repository after granting the GitHub CLI
-  the required `delete_repo` scope.
+- Delete the private GitHub archive repository only after granting the GitHub
+  CLI the required `delete_repo` scope and independently confirming that it no
+  longer contains unique material.

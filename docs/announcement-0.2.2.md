@@ -1,8 +1,8 @@
-# Announcement draft: distributed Victron BLE for Signal K
+# Announcement draft: distributed Victron BLE for Signal K 0.2.2
 
 ## Short version
 
-`signalk-victron-ble-consumer@0.2.0` is now available on npm.
+`signalk-victron-ble-consumer@0.2.2` is available on npm.
 
 It is a Victron consumer for Signal K's official BLE Provider API. Victron BLE
 advertisements are received through distributed ESP32 gateways and consumed via
@@ -12,7 +12,7 @@ other compartments while keeping one unified Signal K data stream.
 
 ## Community post
 
-We have released `signalk-victron-ble-consumer@0.2.0`, a Victron BLE consumer
+We have released `signalk-victron-ble-consumer@0.2.2`, a Victron BLE consumer
 for Signal K Server 2.31 or newer.
 
 The project combines three pieces:
@@ -28,9 +28,10 @@ consumers can share the same BLE stream, and gateways can be placed near the
 devices they receive through bulkheads or other obstructions.
 
 The current release includes tested support for Victron Lynx Smart BMS and
-Orion XS Instant Readout data. The architecture is ready for additional
-device-family parsers, but new support will be added only with real captures,
-device keys, and reference values from VictronConnect.
+Orion XS Instant Readout data. It also decodes SmartSolar MPPT, Orion Smart
+DC-DC, and the other record layouts published by Victron. Families without
+matching hardware evidence remain explicitly marked unverified until captures
+and VictronConnect reference values are available.
 
 The gateway and consumer passed a 90-hour hardware endurance run with stable
 power. The acceptance record is available in the repository.
@@ -41,9 +42,9 @@ the project README for the gateway setup and operational requirements.
 
 Project: https://github.com/haipule/signalk-ble-gateway
 Package: https://www.npmjs.com/package/signalk-victron-ble-consumer
-Release: https://github.com/haipule/signalk-ble-gateway/releases/tag/v0.2.0
+Release: https://github.com/haipule/signalk-ble-gateway/releases/tag/v0.2.2
 
 We are looking for users with other Victron BLE devices who can provide
 anonymized advertisement captures and corresponding VictronConnect values for
- parser development and validation. Never share encryption keys, tokens, or
- vessel-specific network details publicly.
+parser development and validation. Never share encryption keys, tokens, or
+vessel-specific network details publicly.

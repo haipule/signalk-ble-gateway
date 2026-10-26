@@ -1,72 +1,64 @@
 # Roadmap
 
-## 1. Architecture and protocol
+## Stable 0.2 release line
 
-- [x] Document transitional and target architecture.
-- [x] Define versioned advertisement model.
-- [x] Compare protocol with `dirkwa/sensesp-ble-gateway`.
-- [x] Decide authentication, buffering, acknowledgement, and retry semantics.
+The 0.2 architecture and advertisement MVP are complete:
 
-## 2. Headless firmware foundation
+- [x] Keep firmware generic and manufacturer-independent.
+- [x] Send bounded advertisement batches to Signal K's official remote BLE
+  provider.
+- [x] Consume the unified advertisement stream through `app.bleApi`.
+- [x] Keep Victron configuration, keys, decoding, and Signal K paths in the
+  server-side consumer.
+- [x] Expose reset, heap, scan, queue, delivery, and categorized-drop
+  diagnostics in the gateway firmware.
+- [x] Complete a 90.8-hour stable-power endurance run with both gateways,
+  without an observed uptime reset or scan-start failure.
+- [x] Publish the stable consumer and subsequent 0.2.2 decoder expansion.
 
-- [x] Pin PlatformIO, SenseESP v3, and dependencies.
-- [x] Add DHCP, hostname, authenticated web UI, and OTA.
-- [x] Expose reset reason, heap, lifecycle, queue, and delivery diagnostics.
-- [ ] Complete a multi-day run on stable power without an unexpected reset.
+The acceptance evidence is recorded in `docs/test-record-2026-08-22.md`. The
+legacy implementation remains available at `v0.1.0-rc.1` for rollback.
 
-## 3. Advertisement MVP
+## Current work
 
-- [x] Passive BLE scanning and bounded batching.
-- [x] Authenticated HTTP POST with retained in-flight retry.
-- [x] Keep GATT explicitly outside the advertisement MVP.
+### Gateway operations and health
 
-## 4. Gateway provider
+- [ ] Confirm the current installed state of both gateways and close the
+  historical shared-outage record.
+- [ ] Determine the correct official BLE Provider API boundary for gateway
+  liveness; do not reintroduce a parallel provider.
+- [ ] Add configurable expected-gateway state, last-seen diagnostics, and
+  deduplicated offline/recovery notifications.
 
-- [x] Validate HTTP batches and expose gateway diagnostics.
-- [x] Provide a stable internal consumer event.
-- [x] Isolate current Signal K integration behind the provider.
-- [x] Return HTTP 503 and emit no events while disabled.
-- [x] Verify outage, queueing, and recovery behavior on the installed system.
-- [ ] Add an integration test with multiple simulated or physical gateways.
+### Integration tests
 
-## 5. Victron consumer
+- [x] Run consumer tests automatically for pushes and pull requests.
+- [ ] Add a multi-gateway integration test.
+- [ ] Add repeatable outage and recovery coverage at the official provider
+  boundary.
 
-- [x] Keep device configuration and keys exclusively server-side.
-- [x] Decode Lynx Smart BMS and publish battery paths.
-- [x] Decode Orion XS and publish charger paths.
-- [x] Provide a key-safe diagnostic web application.
-- [x] Verify Orion paths and values in the Signal K data browser.
+### Victron coverage
 
-## 6. Official BLE API migration
+- [x] Decode and publish hardware-tested Lynx Smart BMS and Orion XS records.
+- [x] Decode SmartSolar MPPT and Orion Smart DC-DC records using specification
+  vectors and available real-device evidence.
+- [x] Add fixture-tested decoders for the remaining published record layouts,
+  while marking families without hardware validation as unverified.
+- [ ] Validate the available Smart Batteries and other unverified families
+  against VictronConnect before promoting their support status.
+- [ ] Complete AC Charger (`0x08`) hardware validation tracked by issue #6.
 
-- [x] Send firmware batches to the built-in remote BLE provider.
-- [x] Move the Victron consumer to the unified advertisement stream.
-- [x] Remove the transitional Signal K provider from the 0.2 branch.
-- [ ] Validate against the first stable Signal K release containing PR #2588.
-- [ ] Complete parallel hardware comparison with the 0.1 release.
+### Release presentation
 
-## 7. Later GATT and multi-gateway work
+- [ ] Create the GitHub release for `v0.2.2`.
+- [ ] Add a concise demo or screenshot and publish the updated community
+  announcement.
+
+## Later GATT and provider-selection work
 
 - [ ] Measure resources with a separate single-device GATT prototype.
-- [ ] Specify and implement a control WebSocket.
-- [ ] Add claims, provider selection, and failover.
-- [ ] Extend on-board and endurance tests.
-
-## Version 0.1.0 release gate
-
-- [x] Provider outage and recovery verified.
-- [ ] At least 24 hours on stable power without reset.
-- [ ] Confirm no steady-state drop increase, categorized outage losses, and
-  `scan_start_failures = 0` during that run.
-- [x] Compare Lynx and Orion values with VictronConnect.
-- [x] Confirm Orion paths in the Signal K data browser.
-- [x] Document the installed ESP32 and Signal K server state.
-
-## 0.1.0 scope freeze
-
-The `v0.1.0-rc.1` feature set is frozen. Only defects, tests, diagnostics, and
-acceptance-documentation corrections are allowed before final release. New
-manufacturer decoders, sensors, GATT, the control WebSocket, and additional
-Signal K integrations belong to 0.2.0 or a separate product.
-
-Tag `v0.1.0` only after every release-gate item is supported by evidence.
+- [ ] Specify and implement the official control WebSocket contract only when
+  a consumer requires GATT.
+- [ ] Add claims, provider selection, and failover without coupling consumers
+  to gateway transport.
+- [ ] Extend on-board and automated endurance tests.

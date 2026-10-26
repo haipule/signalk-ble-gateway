@@ -16,11 +16,11 @@ The ESP32 forwards raw BLE advertisements. It does not contain Victron logic,
 decryption keys, or Signal K paths. Manufacturer logic runs exclusively in
 server-side consumer plugins.
 
-## Current status: 0.2.0 stable
+## Current status: 0.2.2 stable
 
-This version requires Signal K Server 2.31 or newer and uses the official BLE
-Provider API delivered by PR #2588. The working legacy implementation remains
-available as `v0.1.0-rc.1` and on the 0.1 release line.
+The 0.2 release line requires Signal K Server 2.31 or newer and uses the
+official BLE Provider API delivered by PR #2588. The working legacy
+implementation remains available as `v0.1.0-rc.1` and on the 0.1 release line.
 
 ## Why this project is different
 
@@ -86,7 +86,7 @@ application.
 
 Additional device families will be marked supported only after we have real
 advertisement captures, a verified decoder, fixture-based tests, and confirmed
-Signal K paths. See the [Victron coverage roadmap](TODO.md#priority-7-expand-victron-ble-coverage)
+Signal K paths. See the [Victron coverage roadmap](TODO.md#priority-4-expand-victron-ble-coverage)
 for the current development order.
 
 Lynx Smart BMS values are published below:
@@ -108,7 +108,7 @@ electrical.chargers.<device-id>.chargerState
 electrical.chargers.<device-id>.chargerError
 ```
 
-The 0.2.0 release passed a 90-hour endurance run on stable power. The
+The 0.2 release line passed a 90-hour endurance run on stable power. The
 acceptance record is in
 [`docs/test-record-2026-08-22.md`](docs/test-record-2026-08-22.md). A
 previously observed brownout was a supply reset, not a firmware stability
@@ -132,8 +132,7 @@ implemented only when a consumer needs GATT.
    `firmware/include/secrets.h` and enter local credentials.
 4. Build and flash the ESP32 from `firmware/`.
 
-Keep the `v0.1.x` installation available for rollback until the 0.2 firmware
-has passed the long-duration hardware test.
+The `v0.1.0-rc.1` tag remains available as the legacy rollback release.
 
 Detailed installation and acceptance instructions are in
 [`docs/15-Operations-and-Diagnostics.md`](docs/15-Operations-and-Diagnostics.md).
