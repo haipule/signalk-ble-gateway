@@ -57,6 +57,20 @@ test('rejects a key whose first byte does not match', () => {
   )
 })
 
+test('skips manufacturer records that are not Instant Readout', () => {
+  const keyHex = '00112233445566778899AABBCCDDEEFF'
+  for (const hex of ['01BA7BE7A69A04153E16000000BAA297', '02BA7BE7A69A02153E16B1EA3124C39E27EB', '01']) {
+    assert.equal(decodeEnvelope({ manufacturerData: { 737: hex } }, keyHex), null)
+  }
+})
+
+test('still rejects a truncated Instant Readout record', () => {
+  assert.throws(
+    () => decodeEnvelope({ manufacturerData: { 737: '100002' } }, '00112233445566778899AABBCCDDEEFF'),
+    /too short/
+  )
+})
+
 function writeBits(buffer, start, width, value) {
   let raw = BigInt(value)
   if (raw < 0) raw += 1n << BigInt(width)

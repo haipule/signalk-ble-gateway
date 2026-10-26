@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Skip manufacturer records that are not Instant Readout (a leading byte other
+  than 0x10, such as the VE.Smart Networking beacons a SmartShunt interleaves
+  with its readings) instead of reporting them as decode errors.
+- A decode error no longer replaces the last good reading of a device.
+- A device is reported online while a valid reading arrived within the last
+  two minutes, instead of following the most recent packet.
+- Only freshly decoded readings are published to Signal K.
+
 ## 0.2.1
 
 - Add a generic Victron BLE energy-and-radio pictogram to the WebApp favicon,

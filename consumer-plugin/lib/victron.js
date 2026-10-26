@@ -23,8 +23,12 @@ function decodeEnvelope(advertisement, keyValue) {
   const manufacturerHex = advertisement?.manufacturerData?.[VICTRON_COMPANY_ID]
   if (manufacturerHex === undefined) return null
   const payload = parseHex(manufacturerHex)
+  // Devices interleave other advertisements under the same company ID, for
+  // example VE.Smart Networking beacons with a leading 0x01 or 0x02. They are
+  // not Instant Readout records and carry nothing this decoder can use, so
+  // they are skipped instead of reported as decode errors.
+  if (payload[0] !== 0x10) return null
   if (payload.length < 9) throw new Error('Victron manufacturer payload is too short')
-  if (payload[0] !== 0x10) throw new Error('unsupported Victron manufacturer record')
 
   const key = normalizeKey(keyValue)
   const modelId = payload.readUInt16LE(2)

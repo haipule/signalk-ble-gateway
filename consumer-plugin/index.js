@@ -49,7 +49,7 @@ module.exports = function createPlugin(app) {
       }
       listener = advertisement => {
         const result = consumer.accept(advertisement)
-        if (result?.state.decoded?.measurements) {
+        if (result && !result.state.decode_error && result.state.decoded?.measurements) {
           app.handleMessage(this.id, measurementDelta(result.device, result.state.decoded))
         }
         const status = consumer.status()
