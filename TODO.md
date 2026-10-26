@@ -7,17 +7,16 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: planning complete; implementation not started.
+- Status: deployed baseline confirmed; implementation not started.
 - Last reviewed: 2026-10-25.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: confirm the commits and build identities currently running
-  on both installed ESP32 gateways, without flashing or restarting them.
-- Current blocker: the checked-out integration repositories are on
-  `wip/codex-2026-08-18`; it is not yet confirmed that these commits match the
-  installed firmware.
+- Next exact action: write the library-boundary ADR, then run the local
+  PlatformIO packaging spike without changing either integration repository.
+- Current blocker: none for ADR, packaging, tests, or local builds. Onboard
+  deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not
   flash, perform OTA, restart a gateway, or change the installed configuration
   without a separate explicit approval and rollback plan.
@@ -42,12 +41,14 @@ checkpoint before starting unrelated work.
   never consume a moving `main` branch in production.
 - [x] Keep the first phase build-only; require separate approval before any
   flash or OTA action.
-- [ ] Read the running firmware build identity from the port gateway and map it
+- [x] Read the running firmware build identity from the port gateway and map it
   to an exact repository commit.
-- [ ] Read the running firmware build identity from the starboard gateway and
+- [x] Read the running firmware build identity from the starboard gateway and
   map it to an exact repository commit.
-- [ ] Record whether the installed firmware matches the respective
+- [x] Record whether the installed firmware matches the respective
   `wip/codex-2026-08-18` branch or another revision.
+
+Evidence: `docs/deployed-gateway-baseline-2026-10-25.md`.
 
 ### Phase 1: Package and interface design
 
