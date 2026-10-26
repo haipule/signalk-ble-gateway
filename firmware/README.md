@@ -25,6 +25,11 @@ If `WEB_ADMIN_USERNAME` or `WEB_ADMIN_PASSWORD` is absent from an older local
 configuration, the firmware temporarily falls back to `admin` and the OTA
 password. Set separate credentials before installation.
 
+`GATEWAY_BLE_MAC_ALLOWLIST` optionally seeds a comma-separated BLE MAC
+allowlist. The authenticated web setting normalizes case and separators,
+removes duplicates, and requires a restart. An empty value forwards all
+advertisers.
+
 ## Build and first flash
 
 ```sh
@@ -53,10 +58,11 @@ Do not put secrets in `platformio.ini`.
 
 After Wi-Fi and Signal K connect, the serial log reports a running BLE scanner.
 Accepted batches appear as `Delivered batch`. The status page reports received,
-delivered, pending, and dropped advertisement counters, together with reset and
-heap information. Firmware 0.2.0-beta.2 also separates queue-overflow, mutex,
-and invalid-batch drops and reports HTTP status, request duration, retry delay,
-and the Git-derived `Gateway build` identity.
+delivered, pending, dropped, and allowlist-filtered advertisement counters,
+together with reset and heap information. Firmware 0.2.0-beta.2 also separates
+queue-overflow, mutex, and invalid-batch drops and reports HTTP status, request
+duration, retry delay, gateway-library version, and the Git-derived
+`Gateway build` identity.
 
 ## Acceptance criteria
 

@@ -21,10 +21,33 @@ struct AdvertisementGatewayConfig {
   String hostname;
   String firmware_version;
   String provider_token;
+  // Empty means allow all devices. Addresses are normalized before matching.
+  std::vector<String> allowed_macs;
   uint32_t post_interval_ms = 2000;
   uint32_t max_retry_interval_ms = 30000;
   size_t max_pending_advertisements = 100;
   size_t max_batch_size = 20;
+};
+
+struct AdvertisementGatewayDiagnostics {
+  bool running = false;
+  bool scanning = false;
+  bool token_available = false;
+  uint32_t received = 0;
+  uint32_t delivered = 0;
+  uint32_t dropped = 0;
+  uint32_t filtered = 0;
+  uint32_t post_success = 0;
+  uint32_t post_fail = 0;
+  uint32_t dropped_queue_full = 0;
+  uint32_t dropped_lock_timeout = 0;
+  uint32_t dropped_invalid_batch = 0;
+  int32_t last_http_status = 0;
+  uint32_t last_post_duration_ms = 0;
+  uint32_t retry_interval_ms = 0;
+  uint32_t scan_start_requests = 0;
+  uint32_t scan_start_failures = 0;
+  size_t pending = 0;
 };
 
 /**
@@ -49,9 +72,12 @@ class AdvertisementGateway {
   bool start();
   void stop();
 
+  AdvertisementGatewayDiagnostics diagnostics() const;
+
   uint32_t received() const { return received_.load(); }
   uint32_t delivered() const { return delivered_.load(); }
   uint32_t dropped() const { return dropped_.load(); }
+  uint32_t filtered() const { return filtered_.load(); }
   uint32_t post_success() const { return post_success_.load(); }
   uint32_t post_fail() const { return post_fail_.load(); }
   uint32_t dropped_queue_full() const { return dropped_queue_full_.load(); }
@@ -80,6 +106,7 @@ class AdvertisementGateway {
   void task_loop();
   static void task_entry(void* argument);
   bool prepare_batch();
+  bool is_allowed(const String& address) const;
   bool post_batch();
   String serialize_batch() const;
 
@@ -101,6 +128,7 @@ class AdvertisementGateway {
   std::atomic<uint32_t> dropped_queue_full_{0};
   std::atomic<uint32_t> dropped_lock_timeout_{0};
   std::atomic<uint32_t> dropped_invalid_batch_{0};
+  std::atomic<uint32_t> filtered_{0};
   std::atomic<uint32_t> post_success_{0};
   std::atomic<uint32_t> post_fail_{0};
   std::atomic<int32_t> last_http_status_{0};

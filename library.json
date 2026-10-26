@@ -22,6 +22,8 @@
     "espressif32"
   ],
   "headers": [
+    "signalk_remote_ble_gateway/advertisement_gateway.h",
+    "signalk_remote_ble_gateway/ble_allowlist_config.h",
     "signalk_remote_ble_gateway/version.h"
   ],
   "build": {
