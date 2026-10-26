@@ -7,16 +7,15 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: Phase 2 extraction implemented on
-  `codex/extract-gateway-library`; standalone build verification pending.
+- Status: Phase 2 extraction and standalone build verification completed on
+  `codex/extract-gateway-library`; focused seam-based transport tests remain.
 - Last reviewed: 2026-10-26.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: build the standalone ESP32 target, fix any extraction
-  regressions, then add focused allowlist/configuration tests before marking
-  Phase 2 items complete.
+- Next exact action: add mockable BLE, HTTP, and time seams plus focused tests
+  for filtering, queue bounds, retries, invalid batches, and lifecycle behavior.
 - Current blocker: none for ADR, packaging, tests, or local builds. Onboard
   deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not
@@ -73,18 +72,20 @@ Evidence: `docs/ADR/ADR-007-Reusable-Gateway-Library.md` and
 
 ### Phase 2: Extract without changing behavior
 
-- [ ] Bring the generic MAC allowlist, MAC normalization, and `filtered`
+- [x] Bring the generic MAC allowlist, MAC normalization, and `filtered`
   diagnostics from the onboard variants into the source-of-truth implementation.
-- [ ] Move advertisement batching, bounded queues, retry/backoff, HTTP
+- [x] Move advertisement batching, bounded queues, retry/backoff, HTTP
   transport, scan recovery, allowlist filtering, and diagnostics into the
   reusable library.
-- [ ] Keep Bluetooth controller reset/normalization as an explicit application
+- [x] Keep Bluetooth controller reset/normalization as an explicit application
   action; the library must not silently deinitialize global Bluetooth state.
-- [ ] Convert the standalone firmware to consume the local library.
+- [x] Convert the standalone firmware to consume the local library.
 - [ ] Add tests for configuration, filtering, queue bounds, retries, invalid
   batches, and lifecycle behavior using mockable BLE, network, and time seams.
 - [ ] Confirm that the standalone gateway behavior and public protocol remain
   unchanged.
+
+Build and package evidence: `docs/gateway-library-extraction-2026-10-26.md`.
 
 ### Phase 3: Build and resource gates
 

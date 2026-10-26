@@ -10,6 +10,9 @@ firmware/.vscode/
 .DS_Store
 *.swp
 
+# Generated package archives
+*.tar.gz
+
 # Generated ESP-IDF state
 firmware/managed_components/
 firmware/sdkconfig.*
