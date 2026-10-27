@@ -13,6 +13,7 @@
 #include "sensesp/signalk/signalk_ws_client.h"
 #include "sensesp_ble_gateway/ble_advertisement.h"
 #include "sensesp_ble_gateway/ble_provisioner.h"
+#include "signalk_remote_ble_gateway/runtime_interfaces.h"
 #include "signalk_remote_ble_gateway/transport_policy.h"
 
 namespace gateway {
@@ -65,7 +66,9 @@ class AdvertisementGateway {
   AdvertisementGateway(
       std::shared_ptr<sensesp::BLEProvisioner> ble,
       std::shared_ptr<sensesp::SKWSClient> signalk_client,
-      AdvertisementGatewayConfig config);
+      AdvertisementGatewayConfig config,
+      std::shared_ptr<GatewayClock> clock = nullptr,
+      std::shared_ptr<HttpTransport> http_transport = nullptr);
   ~AdvertisementGateway();
 
   AdvertisementGateway(const AdvertisementGateway&) = delete;
@@ -114,6 +117,8 @@ class AdvertisementGateway {
 
   std::shared_ptr<sensesp::BLEProvisioner> ble_;
   std::shared_ptr<sensesp::SKWSClient> signalk_client_;
+  std::shared_ptr<GatewayClock> clock_;
+  std::shared_ptr<HttpTransport> http_transport_;
   AdvertisementGatewayConfig config_;
   bool allowlist_configured_ = false;
   std::vector<std::string> allowed_macs_;

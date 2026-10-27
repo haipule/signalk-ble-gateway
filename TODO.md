@@ -7,17 +7,17 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: Phase 2 extraction is merged. The platform-independent transport
-  policy core and native tests are complete on
-  `codex/gateway-transport-policy-tests`; runtime seams and lifecycle tests
-  remain.
-- Last reviewed: 2026-10-26.
+- Status: Phase 2 extraction and transport-policy tests are merged. Mockable
+  HTTP and monotonic-time runtime seams plus native request/timing tests are
+  complete on `codex/gateway-runtime-seams`; BLE scan, task scheduling, and
+  lifecycle seams remain.
+- Last reviewed: 2026-10-27.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: add mockable BLE, HTTP, and time runtime seams, then cover
-  scan recovery, request execution, scheduling, and lifecycle behavior.
+- Next exact action: add mockable BLE scan and task-lifecycle seams, then cover
+  scan recovery, scheduling, and lifecycle behavior.
 - Current blocker: none for ADR, packaging, tests, or local builds. Onboard
   deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not
@@ -84,8 +84,10 @@ Evidence: `docs/ADR/ADR-007-Reusable-Gateway-Library.md` and
 - [x] Convert the standalone firmware to consume the local library.
 - [x] Extract and test the platform-independent MAC normalization, allowlist
   filtering, bounded queue, in-flight batch, HTTP result, and retry policies.
-- [ ] Add mockable BLE, HTTP, and time runtime seams plus focused scan-recovery,
-  request-execution, scheduling, and lifecycle tests.
+- [x] Add mockable HTTP and monotonic-time runtime seams plus focused request-
+  execution and timing tests.
+- [ ] Add mockable BLE scan and task-lifecycle seams plus focused scan-recovery,
+  scheduling, and lifecycle tests.
 - [ ] Confirm that the standalone gateway behavior and public protocol remain
   unchanged.
 
