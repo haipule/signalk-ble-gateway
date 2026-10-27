@@ -7,15 +7,17 @@ checkpoint before starting unrelated work.
 
 ## Active checkpoint: reusable gateway library
 
-- Status: Phase 2 extraction and standalone build verification completed on
-  `codex/extract-gateway-library`; focused seam-based transport tests remain.
+- Status: Phase 2 extraction is merged. The platform-independent transport
+  policy core and native tests are complete on
+  `codex/gateway-transport-policy-tests`; runtime seams and lifecycle tests
+  remain.
 - Last reviewed: 2026-10-26.
 - Source of truth: this `signalk-ble-gateway` repository.
 - Integration consumers:
   - `/home/hans/projects/signalk-engine-room-port-gateway`
   - `/home/hans/projects/signalk-engine-room-stbd-gateway`
-- Next exact action: add mockable BLE, HTTP, and time seams plus focused tests
-  for filtering, queue bounds, retries, invalid batches, and lifecycle behavior.
+- Next exact action: add mockable BLE, HTTP, and time runtime seams, then cover
+  scan recovery, request execution, scheduling, and lifecycle behavior.
 - Current blocker: none for ADR, packaging, tests, or local builds. Onboard
   deployment remains separately gated.
 - Safety boundary: extraction, tests, and local builds are allowed. Do not
@@ -80,12 +82,17 @@ Evidence: `docs/ADR/ADR-007-Reusable-Gateway-Library.md` and
 - [x] Keep Bluetooth controller reset/normalization as an explicit application
   action; the library must not silently deinitialize global Bluetooth state.
 - [x] Convert the standalone firmware to consume the local library.
-- [ ] Add tests for configuration, filtering, queue bounds, retries, invalid
-  batches, and lifecycle behavior using mockable BLE, network, and time seams.
+- [x] Extract and test the platform-independent MAC normalization, allowlist
+  filtering, bounded queue, in-flight batch, HTTP result, and retry policies.
+- [ ] Add mockable BLE, HTTP, and time runtime seams plus focused scan-recovery,
+  request-execution, scheduling, and lifecycle tests.
 - [ ] Confirm that the standalone gateway behavior and public protocol remain
   unchanged.
 
 Build and package evidence: `docs/gateway-library-extraction-2026-10-26.md`.
+Policy-test build evidence: `tools/test-gateway-library.sh` and the successful
+standalone build on 2026-10-26 (1,890,197 bytes flash, 121,223 bytes IRAM, and
+62,288 bytes DRAM sections).
 
 ### Phase 3: Build and resource gates
 

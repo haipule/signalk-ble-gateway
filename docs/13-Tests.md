@@ -10,6 +10,18 @@
 
 Hardware, network, and time dependencies should remain mockable.
 
+The platform-independent gateway transport policy tests run with:
+
+```sh
+tools/test-gateway-library.sh
+```
+
+They exercise the production MAC normalization, allowlist filtering, bounded
+queue and batch retention, invalid-batch classification, and retry policy
+without requiring an ESP32. BLE scanning, HTTP execution, scheduling, and
+lifecycle coordination still require explicit injectable interfaces before
+they can be covered by native mocks.
+
 ## Integration tests
 
 - firmware-compatible batches against the provider,

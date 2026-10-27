@@ -40,11 +40,12 @@ const char* address_type_name(const uint8_t address_type) {
   }
 }
 
-String normalize_mac(String address) {
-  address.trim();
-  address.replace('-', ':');
-  address.toUpperCase();
-  return address;
+String normalize_mac(const String& address) {
+  std::string normalized;
+  if (!normalize_mac_address(address.c_str(), &normalized)) {
+    return "";
+  }
+  return normalized.c_str();
 }
 
 }  // namespace
@@ -55,13 +56,19 @@ AdvertisementGateway::AdvertisementGateway(
     AdvertisementGatewayConfig config)
     : ble_(std::move(ble)),
       signalk_client_(std::move(signalk_client)),
-      config_(std::move(config)) {
-  for (String& address : config_.allowed_macs) {
-    address = normalize_mac(address);
+      config_(std::move(config)),
+      queue_(config_.max_pending_advertisements, config_.max_batch_size) {
+  allowlist_configured_ = !config_.allowed_macs.empty();
+  allowed_macs_.reserve(config_.allowed_macs.size());
+  for (const String& address : config_.allowed_macs) {
+    const String normalized = normalize_mac(address);
+    if (!normalized.isEmpty() &&
+        std::find(allowed_macs_.begin(), allowed_macs_.end(),
+                  normalized.c_str()) == allowed_macs_.end()) {
+      allowed_macs_.emplace_back(normalized.c_str());
+    }
   }
   mutex_ = xSemaphoreCreateMutex();
-  pending_.reserve(config_.max_pending_advertisements);
-  inflight_.reserve(config_.max_batch_size);
 }
 
 AdvertisementGatewayDiagnostics AdvertisementGateway::diagnostics() const {
@@ -109,9 +116,7 @@ bool AdvertisementGateway::start() {
     running_.store(false);
     return false;
   }
-  if (mutex_ == nullptr || config_.gateway_id.isEmpty() ||
-      config_.max_batch_size == 0 ||
-      config_.max_pending_advertisements == 0) {
+  if (mutex_ == nullptr || config_.gateway_id.isEmpty() || !queue_.valid()) {
     ESP_LOGE(kLogTag,
              "Invalid gateway configuration: mutex=%d gateway_id=%d "
              "batch=%u pending=%u",
@@ -160,7 +165,7 @@ size_t AdvertisementGateway::pending() const {
       xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) != pdTRUE) {
     return 0;
   }
-  const size_t count = pending_.size() + inflight_.size();
+  const size_t count = queue_.size();
   xSemaphoreGive(mutex_);
   return count;
 }
@@ -181,22 +186,20 @@ void AdvertisementGateway::on_advertisement() {
     dropped_lock_timeout_.fetch_add(1, std::memory_order_relaxed);
     return;
   }
-  if (pending_.size() >= config_.max_pending_advertisements) {
-    pending_.erase(pending_.begin());
+  if (queue_.push(advertisement) ==
+      BoundedBatchQueue<sensesp::BLEAdvertisement>::PushResult::
+          kAcceptedAfterDroppingOldest) {
     dropped_.fetch_add(1, std::memory_order_relaxed);
     dropped_queue_full_.fetch_add(1, std::memory_order_relaxed);
   }
-  pending_.push_back(advertisement);
   xSemaphoreGive(mutex_);
 }
 
 bool AdvertisementGateway::is_allowed(const String& address) const {
-  if (config_.allowed_macs.empty()) {
-    return true;
+  if (allowlist_configured_ && allowed_macs_.empty()) {
+    return false;
   }
-  const String normalized = normalize_mac(address);
-  return std::find(config_.allowed_macs.begin(), config_.allowed_macs.end(),
-                   normalized) != config_.allowed_macs.end();
+  return mac_is_allowed(address.c_str(), allowed_macs_);
 }
 
 void AdvertisementGateway::task_entry(void* argument) {
@@ -255,12 +258,9 @@ void AdvertisementGateway::task_loop() {
       continue;
     }
 
-    if (post_batch()) {
-      retry_interval_ms = config_.post_interval_ms;
-    } else {
-      retry_interval_ms =
-          std::min(retry_interval_ms * 2, config_.max_retry_interval_ms);
-    }
+    retry_interval_ms = next_retry_interval(
+        retry_interval_ms, config_.post_interval_ms,
+        config_.max_retry_interval_ms, post_batch());
     retry_interval_ms_.store(retry_interval_ms, std::memory_order_relaxed);
 
     // A successful request may leave a backlog behind. Drain it immediately
@@ -282,21 +282,9 @@ bool AdvertisementGateway::prepare_batch() {
   if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
-  if (!inflight_.empty()) {
-    xSemaphoreGive(mutex_);
-    return true;
-  }
-  if (pending_.empty()) {
-    xSemaphoreGive(mutex_);
-    return false;
-  }
-
-  const size_t count = std::min(pending_.size(), config_.max_batch_size);
-  inflight_.assign(pending_.begin(), pending_.begin() + count);
-  pending_.erase(pending_.begin(), pending_.begin() + count);
-  inflight_sequence_ = next_sequence_++;
+  const bool prepared = queue_.prepare();
   xSemaphoreGive(mutex_);
-  return true;
+  return prepared;
 }
 
 String AdvertisementGateway::serialize_batch() const {
@@ -313,7 +301,7 @@ String AdvertisementGateway::serialize_batch() const {
   }
 
   JsonArray devices = document["devices"].to<JsonArray>();
-  for (const auto& advertisement : inflight_) {
+  for (const auto& advertisement : queue_.inflight()) {
     JsonObject device = devices.add<JsonObject>();
     device["mac"] = advertisement.address;
     const char* address_type = address_type_name(advertisement.address_type);
@@ -380,29 +368,30 @@ bool AdvertisementGateway::post_batch() {
                                std::memory_order_relaxed);
   esp_http_client_cleanup(http);
 
-  if (status >= 200 && status < 300) {
-    const size_t delivered_count = inflight_.size();
+  const HttpBatchResult batch_result = classify_http_status(status);
+  if (batch_result == HttpBatchResult::kDelivered) {
+    const size_t delivered_count = queue_.inflight_size();
     delivered_.fetch_add(delivered_count, std::memory_order_relaxed);
     post_success_.fetch_add(1, std::memory_order_relaxed);
     ESP_LOGI(kLogTag, "Delivered batch sequence=%u advertisements=%u",
-             static_cast<unsigned>(inflight_sequence_),
+             static_cast<unsigned>(queue_.inflight_sequence()),
              static_cast<unsigned>(delivered_count));
     if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-      inflight_.clear();
+      queue_.acknowledge();
       xSemaphoreGive(mutex_);
     }
     return true;
   }
 
   post_fail_.fetch_add(1, std::memory_order_relaxed);
-  if (status == 400) {
+  if (batch_result == HttpBatchResult::kDropInvalid) {
     ESP_LOGE(kLogTag, "BLE API rejected invalid batch sequence=%u",
-             static_cast<unsigned>(inflight_sequence_));
+             static_cast<unsigned>(queue_.inflight_sequence()));
     if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-      dropped_.fetch_add(inflight_.size(), std::memory_order_relaxed);
-      dropped_invalid_batch_.fetch_add(inflight_.size(),
+      const size_t dropped_count = queue_.drop_invalid();
+      dropped_.fetch_add(dropped_count, std::memory_order_relaxed);
+      dropped_invalid_batch_.fetch_add(dropped_count,
                                        std::memory_order_relaxed);
-      inflight_.clear();
       xSemaphoreGive(mutex_);
     }
     return true;
@@ -421,7 +410,7 @@ bool AdvertisementGateway::post_batch() {
   } else {
     ESP_LOGW(kLogTag, "POST failed result=%s status=%d sequence=%u",
              esp_err_to_name(result), status,
-             static_cast<unsigned>(inflight_sequence_));
+             static_cast<unsigned>(queue_.inflight_sequence()));
   }
   return false;
 }

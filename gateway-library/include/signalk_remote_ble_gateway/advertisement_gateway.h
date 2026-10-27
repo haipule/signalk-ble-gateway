@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "freertos/FreeRTOS.h"
@@ -12,6 +13,7 @@
 #include "sensesp/signalk/signalk_ws_client.h"
 #include "sensesp_ble_gateway/ble_advertisement.h"
 #include "sensesp_ble_gateway/ble_provisioner.h"
+#include "signalk_remote_ble_gateway/transport_policy.h"
 
 namespace gateway {
 
@@ -113,12 +115,11 @@ class AdvertisementGateway {
   std::shared_ptr<sensesp::BLEProvisioner> ble_;
   std::shared_ptr<sensesp::SKWSClient> signalk_client_;
   AdvertisementGatewayConfig config_;
-  uint32_t next_sequence_ = 0;
-  uint32_t inflight_sequence_ = 0;
+  bool allowlist_configured_ = false;
+  std::vector<std::string> allowed_macs_;
+  BoundedBatchQueue<sensesp::BLEAdvertisement> queue_;
 
   mutable SemaphoreHandle_t mutex_ = nullptr;
-  std::vector<sensesp::BLEAdvertisement> pending_;
-  std::vector<sensesp::BLEAdvertisement> inflight_;
   TaskHandle_t task_ = nullptr;
   std::atomic<bool> running_{false};
 
