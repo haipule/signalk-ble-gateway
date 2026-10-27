@@ -1,33 +1,13 @@
 #include "signalk_remote_ble_gateway/ble_allowlist_config.h"
 
+#include "signalk_remote_ble_gateway/transport_policy.h"
+
 #include <esp_log.h>
 
 namespace gateway {
 namespace {
 
 constexpr char kLogTag[] = "ble_allowlist";
-
-bool is_hex_digit(const char value) {
-  return (value >= '0' && value <= '9') ||
-         (value >= 'A' && value <= 'F') ||
-         (value >= 'a' && value <= 'f');
-}
-
-bool is_mac_address(const String& value) {
-  if (value.length() != 17) {
-    return false;
-  }
-  for (size_t index = 0; index < value.length(); ++index) {
-    if ((index + 1) % 3 == 0) {
-      if (value[index] != ':') {
-        return false;
-      }
-    } else if (!is_hex_digit(value[index])) {
-      return false;
-    }
-  }
-  return true;
-}
 
 }  // namespace
 
@@ -79,14 +59,13 @@ bool BleAllowlistConfig::normalize(const String& input, String* output) {
   int start = 0;
   while (start < input.length()) {
     const int separator = input.indexOf(',', start);
-    String address = input.substring(
+    const String address = input.substring(
         start, separator < 0 ? input.length() : separator);
-    address.trim();
-    address.replace('-', ':');
-    address.toUpperCase();
-    if (!is_mac_address(address)) {
+    std::string normalized_address;
+    if (!normalize_mac_address(address.c_str(), &normalized_address)) {
       return false;
     }
+    const String normalized = normalized_address.c_str();
 
     bool duplicate = false;
     int existing_start = 0;
@@ -95,7 +74,7 @@ bool BleAllowlistConfig::normalize(const String& input, String* output) {
       if (output->substring(existing_start,
                             existing_separator < 0 ? output->length()
                                                    : existing_separator) ==
-          address) {
+          normalized) {
         duplicate = true;
         break;
       }
@@ -108,7 +87,7 @@ bool BleAllowlistConfig::normalize(const String& input, String* output) {
       if (!output->isEmpty()) {
         *output += ',';
       }
-      *output += address;
+      *output += normalized;
     }
 
     if (separator < 0) {

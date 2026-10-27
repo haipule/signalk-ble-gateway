@@ -13,6 +13,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gateway-library-native:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Run gateway library policy tests
+        run: tools/test-gateway-library.sh
+
   test:
     runs-on: ubuntu-24.04
     strategy:
