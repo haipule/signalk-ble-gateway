@@ -18,9 +18,10 @@ tools/test-gateway-library.sh
 
 They exercise the production MAC normalization, allowlist filtering, bounded
 queue and batch retention, invalid-batch classification, and retry policy
-without requiring an ESP32. BLE scanning, HTTP execution, scheduling, and
-lifecycle coordination still require explicit injectable interfaces before
-they can be covered by native mocks.
+without requiring an ESP32. Native fakes also verify the injected HTTP request
+boundary and monotonic-clock timing, including 32-bit wraparound. BLE scanning,
+task scheduling, and lifecycle coordination still require additional explicit
+injectable interfaces before they can be covered by native mocks.
 
 ## Integration tests
 

@@ -18,6 +18,46 @@ constexpr uint32_t kMissingTokenLogIntervalMs = 30000;
 constexpr uint32_t kHttpTaskStackSize = 6144;
 constexpr uint32_t kBacklogYieldMs = 10;
 
+class EspGatewayClock final : public GatewayClock {
+ public:
+  uint32_t now_ms() const override { return millis(); }
+
+  void delay_ms(const uint32_t duration_ms) override {
+    vTaskDelay(pdMS_TO_TICKS(duration_ms));
+  }
+};
+
+class EspHttpTransport final : public HttpTransport {
+ public:
+  HttpPostResponse post(const HttpPostRequest& request) override {
+    esp_http_client_config_t http_config = {};
+    http_config.url = request.url.c_str();
+    http_config.timeout_ms = request.timeout_ms;
+    http_config.keep_alive_enable = false;
+    esp_http_client_handle_t http = esp_http_client_init(&http_config);
+    if (http == nullptr) {
+      return {ESP_ERR_NO_MEM, 0, 0};
+    }
+
+    esp_http_client_set_method(http, HTTP_METHOD_POST);
+    esp_http_client_set_header(http, "Content-Type", "application/json");
+    if (!request.bearer_token.empty()) {
+      const std::string authorization =
+          "Bearer " + request.bearer_token;
+      esp_http_client_set_header(http, "Authorization",
+                                 authorization.c_str());
+    }
+    esp_http_client_set_header(http, "Connection", "close");
+    esp_http_client_set_post_field(http, request.body.c_str(),
+                                   request.body.size());
+
+    const esp_err_t result = esp_http_client_perform(http);
+    const int status = esp_http_client_get_status_code(http);
+    esp_http_client_cleanup(http);
+    return {result, status, 0};
+  }
+};
+
 String bytes_to_hex(const std::vector<uint8_t>& bytes) {
   String result;
   result.reserve(bytes.size() * 2);
@@ -53,9 +93,14 @@ String normalize_mac(const String& address) {
 AdvertisementGateway::AdvertisementGateway(
     std::shared_ptr<sensesp::BLEProvisioner> ble,
     std::shared_ptr<sensesp::SKWSClient> signalk_client,
-    AdvertisementGatewayConfig config)
+    AdvertisementGatewayConfig config,
+    std::shared_ptr<GatewayClock> clock,
+    std::shared_ptr<HttpTransport> http_transport)
     : ble_(std::move(ble)),
       signalk_client_(std::move(signalk_client)),
+      clock_(clock ? std::move(clock) : std::make_shared<EspGatewayClock>()),
+      http_transport_(http_transport ? std::move(http_transport)
+                                     : std::make_shared<EspHttpTransport>()),
       config_(std::move(config)),
       queue_(config_.max_pending_advertisements, config_.max_batch_size) {
   allowlist_configured_ = !config_.allowed_macs.empty();
@@ -209,11 +254,11 @@ void AdvertisementGateway::task_entry(void* argument) {
 void AdvertisementGateway::task_loop() {
   uint32_t retry_interval_ms = config_.post_interval_ms;
   retry_interval_ms_.store(retry_interval_ms, std::memory_order_relaxed);
-  uint32_t next_scan_recovery_ms = millis() + kScanRecoveryIntervalMs;
+  uint32_t next_scan_recovery_ms = clock_->now_ms() + kScanRecoveryIntervalMs;
   uint32_t next_missing_token_log_ms = 0;
 
   while (running_.load()) {
-    const uint32_t now = millis();
+    const uint32_t now = clock_->now_ms();
     if (!ble_->is_scanning() &&
         static_cast<int32_t>(now - next_scan_recovery_ms) >= 0) {
       const uint32_t request =
@@ -241,7 +286,7 @@ void AdvertisementGateway::task_loop() {
                  "Provider delivery deferred: no bearer token available");
         next_missing_token_log_ms = now + kMissingTokenLogIntervalMs;
       }
-      vTaskDelay(pdMS_TO_TICKS(config_.post_interval_ms));
+      clock_->delay_ms(config_.post_interval_ms);
       continue;
     }
 
@@ -249,12 +294,12 @@ void AdvertisementGateway::task_loop() {
     // of the optional Signal K delta WebSocket. When sharing the SK client's
     // token, wait for that client to finish its authorization lifecycle.
     if (!dedicated_token_available && !signalk_client_->is_connected()) {
-      vTaskDelay(pdMS_TO_TICKS(config_.post_interval_ms));
+      clock_->delay_ms(config_.post_interval_ms);
       continue;
     }
 
     if (!prepare_batch()) {
-      vTaskDelay(pdMS_TO_TICKS(config_.post_interval_ms));
+      clock_->delay_ms(config_.post_interval_ms);
       continue;
     }
 
@@ -271,7 +316,7 @@ void AdvertisementGateway::task_loop() {
         retry_interval_ms == config_.post_interval_ms && pending() > 0
             ? kBacklogYieldMs
             : retry_interval_ms;
-    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+    clock_->delay_ms(delay_ms);
   }
 
   task_ = nullptr;
@@ -291,7 +336,7 @@ String AdvertisementGateway::serialize_batch() const {
   JsonDocument document;
   document["gateway_id"] = config_.gateway_id;
   document["firmware"] = config_.firmware_version;
-  document["uptime"] = millis() / 1000;
+  document["uptime"] = clock_->now_ms() / 1000;
   document["free_heap"] = ESP.getFreeHeap();
   if (!config_.gateway_mac.isEmpty()) {
     document["mac"] = config_.gateway_mac;
@@ -335,38 +380,22 @@ bool AdvertisementGateway::post_batch() {
   const String url = "http://" + server_address + ":" +
                      String(server_port) + kAdvertisementsPath;
 
-  esp_http_client_config_t http_config = {};
-  http_config.url = url.c_str();
-  http_config.timeout_ms = kHttpTimeoutMs;
-  http_config.keep_alive_enable = false;
-  esp_http_client_handle_t http = esp_http_client_init(&http_config);
-  if (http == nullptr) {
-    ESP_LOGW(kLogTag, "Could not create HTTP client");
-    return false;
-  }
-
-  esp_http_client_set_method(http, HTTP_METHOD_POST);
-  esp_http_client_set_header(http, "Content-Type", "application/json");
   const String token = !config_.provider_token.isEmpty()
                            ? config_.provider_token
                            : signalk_client_->get_auth_token();
-  if (!token.isEmpty()) {
-    const String authorization = "Bearer " + token;
-    esp_http_client_set_header(http, "Authorization",
-                               authorization.c_str());
-  }
-  esp_http_client_set_header(http, "Connection", "close");
-  esp_http_client_set_post_field(http, body.c_str(), body.length());
-
-  const uint32_t request_started_ms = millis();
-  const esp_err_t result = esp_http_client_perform(http);
-  // esp_http_client may return an error while a valid HTTP error response is
+  HttpPostRequest request;
+  request.url = url.c_str();
+  request.bearer_token = token.c_str();
+  request.body = body.c_str();
+  request.timeout_ms = kHttpTimeoutMs;
+  // The transport may return an error while a valid HTTP error response is
   // available (for example a 401 challenge). Preserve both diagnostics.
-  const int status = esp_http_client_get_status_code(http);
-  last_http_status_.store(status, std::memory_order_relaxed);
-  last_post_duration_ms_.store(millis() - request_started_ms,
+  const HttpPostResponse response =
+      timed_http_post(*http_transport_, request, *clock_);
+  const int status = response.status;
+  last_http_status_.store(response.status, std::memory_order_relaxed);
+  last_post_duration_ms_.store(response.duration_ms,
                                std::memory_order_relaxed);
-  esp_http_client_cleanup(http);
 
   const HttpBatchResult batch_result = classify_http_status(status);
   if (batch_result == HttpBatchResult::kDelivered) {
@@ -409,7 +438,7 @@ bool AdvertisementGateway::post_batch() {
     }
   } else {
     ESP_LOGW(kLogTag, "POST failed result=%s status=%d sequence=%u",
-             esp_err_to_name(result), status,
+             esp_err_to_name(response.transport_error), status,
              static_cast<unsigned>(queue_.inflight_sequence()));
   }
   return false;
