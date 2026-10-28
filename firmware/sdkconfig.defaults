@@ -6,6 +6,10 @@ CONFIG_FREERTOS_HZ=1000
 # ESP-IDF/Arduino build, this enables Arduino's app_main implementation.
 CONFIG_AUTOSTART_ARDUINO=y
 
+# Optimize the production firmware for size. Keep assertions enabled so this
+# changes code generation without removing runtime diagnostics.
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
 # The AZ-Delivery ESP-32 Dev Kit C V4 has 4 MB of flash.
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 CONFIG_ESPTOOLPY_FLASHSIZE="4MB"

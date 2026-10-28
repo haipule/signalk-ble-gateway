@@ -95,6 +95,9 @@ Build and package evidence: `docs/gateway-library-extraction-2026-10-26.md`.
 Policy-test build evidence: `tools/test-gateway-library.sh` and the successful
 standalone build on 2026-10-26 (1,890,197 bytes flash, 121,223 bytes IRAM, and
 62,288 bytes DRAM sections).
+Size-optimized build evidence:
+`docs/firmware-size-optimization-2026-10-27.md` (1,719,131 bytes application
+flash, 114,615 bytes IRAM, and 61,772 bytes DRAM; assertions remain enabled).
 
 ### Phase 3: Build and resource gates
 
