@@ -9,6 +9,8 @@
 - Show the name a device advertises over BLE in the status API and web
   application.
 - Escape values placed in the web application's markup.
+- Show the Secondary battery ID option in the configuration form only on
+  devices detected as a BMV or SmartShunt, instead of on every device.
 - Add an optional secondary battery ID for publishing a BMV or SmartShunt
   auxiliary starter-battery voltage on a standard Signal K battery path.
 - Skip manufacturer records that are not Instant Readout (a leading byte other

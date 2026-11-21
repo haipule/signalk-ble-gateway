@@ -791,4 +791,13 @@ function modelName(modelId) {
   return MODEL_NAMES[modelId] || null
 }
 
-module.exports = { MODEL_NAMES, modelName }
+/**
+ * True for a BMV or SmartShunt battery monitor, the products whose battery
+ * monitor record can carry an auxiliary (starter battery) voltage. Bluetooth
+ * interface entries and the Smart Battery Sense are excluded.
+ */
+function isShuntBatteryMonitor(modelId) {
+  return /^(BMV-\d{3}|SmartShunt (IP\d{2} )?\d+A)/.test(modelName(modelId) || '')
+}
+
+module.exports = { MODEL_NAMES, isShuntBatteryMonitor, modelName }

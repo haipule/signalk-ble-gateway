@@ -1,47 +1,24 @@
 'use strict'
 
+const { buildSchema } = require('./lib/config-schema')
 const { VictronConsumer } = require('./lib/consumer')
+const { isShuntBatteryMonitor } = require('./lib/victron-models')
 
 module.exports = function createPlugin(app) {
   let consumer = null
   let listener = null
+  // Model ID last decoded per MAC. Kept across plugin restarts (saving the
+  // configuration restarts the plugin) so the form keeps its detected types.
+  const detectedModels = new Map()
 
   return {
     id: 'signalk-victron-ble-consumer',
     name: 'Signal K Victron BLE Consumer',
     description: 'Decodes configured Victron BLE advertisements server-side',
 
-    schema: {
-      type: 'object',
-      properties: {
-        devices: {
-          title: 'Victron devices',
-          type: 'array',
-          default: [],
-          items: {
-            type: 'object',
-            required: ['id', 'name', 'mac', 'advertisementKey'],
-            properties: {
-              id: { title: 'Stable device ID', type: 'string' },
-              name: { title: 'Display name', type: 'string' },
-              mac: { title: 'BLE MAC address', type: 'string' },
-              advertisementKey: {
-                title: 'Victron advertisement key',
-                type: 'string',
-                minLength: 32,
-                maxLength: 32
-              },
-              secondaryBattery: {
-                title: 'Secondary battery ID',
-                description: 'Publish BMV/SmartShunt auxiliary voltage as a separate Signal K battery',
-                type: 'string'
-              },
-              enabled: { title: 'Enabled', type: 'boolean', default: true }
-            }
-          }
-        }
-      }
-    },
+    // Rebuilt each time the admin UI loads the plugin list, so the secondary
+    // battery option appears once a BMV or SmartShunt has been detected.
+    schema: () => buildSchema(secondaryBatteryMacs(detectedModels)),
 
     start(settings = {}) {
       consumer = new VictronConsumer(Array.isArray(settings.devices) ? settings.devices : [])
@@ -54,6 +31,7 @@ module.exports = function createPlugin(app) {
       }
       listener = advertisement => {
         const result = consumer.accept(advertisement)
+        if (result?.state.decoded) detectedModels.set(result.device.mac, result.state.decoded.model_id)
         if (result && !result.state.decode_error && result.state.decoded?.measurements) {
           app.handleMessage(this.id, measurementDelta(result.device, result.state.decoded))
         }
@@ -81,6 +59,12 @@ module.exports = function createPlugin(app) {
       })
     }
   }
+}
+
+function secondaryBatteryMacs(detectedModels) {
+  return [...detectedModels]
+    .filter(([, modelId]) => isShuntBatteryMonitor(modelId))
+    .map(([mac]) => mac)
 }
 
 // Signal K enumerates chargingMode as bulk, acceptance, overcharge, float,
