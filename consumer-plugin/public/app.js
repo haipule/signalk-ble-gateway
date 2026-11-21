@@ -6,8 +6,14 @@ const devices = document.querySelector('#devices')
 const connection = document.querySelector('#connection')
 const template = document.querySelector('#device-template')
 
+// Values can come from the air (a device's advertised name), so they are
+// escaped before being placed in markup.
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => `&#${character.charCodeAt(0)};`)
+}
+
 function field(term, value) {
-  return `<dt>${term}</dt><dd>${value ?? '–'}</dd>`
+  return `<dt>${escapeHtml(term)}</dt><dd>${value == null ? '–' : escapeHtml(value)}</dd>`
 }
 
 function render(status) {
@@ -29,7 +35,8 @@ function render(status) {
       field('Last seen', device.last_seen ? new Date(device.last_seen).toLocaleString() : null),
       field('Key', device.key_configured ? 'configured' : 'missing'),
       field('Record', device.decoded?.record_name),
-      field('Model ID', device.decoded ? `0x${device.decoded.model_id.toString(16).toUpperCase()}` : null)
+      field('Model', device.decoded ? modelLabel(device.decoded) : null),
+      field('Advertised name', device.advertised_name)
     ]
     card.querySelector('dl').innerHTML = [
       ...commonFields,
@@ -40,6 +47,11 @@ function render(status) {
     devices.append(card)
   }
   if (!status.devices.length) devices.innerHTML = '<p>No devices configured yet.</p>'
+}
+
+function modelLabel(decoded) {
+  const id = `0x${decoded.model_id.toString(16).toUpperCase()}`
+  return decoded.model_name ? `${decoded.model_name} (${id})` : id
 }
 
 function measurementFields(decoded) {

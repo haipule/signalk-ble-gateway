@@ -154,6 +154,10 @@ separate starter battery, set the optional **Secondary battery ID** on that
 device. An auxiliary voltage is then published as
 `electrical.batteries.<secondary-id>.voltage`; temperature and mid-point modes
 never use this mapping. Leave the option empty to retain the default behavior.
+The option appears in the configuration form only on a device the plugin has
+already identified as a BMV or SmartShunt from its advertised model ID: let
+the device be heard, then reload the plugin configuration page. A value saved
+earlier is kept while the option is hidden.
 The DC energy meter has no mid-point reading, so that selector is rejected for
 it rather than producing a value the record does not carry.
 

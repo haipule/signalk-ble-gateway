@@ -51,6 +51,46 @@ test('reports a clear error when the BLE API is unavailable', () => {
   assert.equal(instance.advertisementCallbacks.size, 0)
 })
 
+function readout(modelId, keyHex) {
+  const key = Buffer.from(keyHex, 'hex')
+  const header = Buffer.from([0x10, 0x00, 0, 0, 0x02, 0x01, 0x00, key[0]])
+  header.writeUInt16LE(modelId, 2)
+  const counter = Buffer.alloc(16)
+  counter.writeUInt16LE(1, 0)
+  const cipher = require('node:crypto').createCipheriv('aes-128-ctr', key, counter)
+  const body = Buffer.concat([cipher.update(Buffer.alloc(16)), cipher.final()])
+  return Buffer.concat([header, body]).toString('hex')
+}
+
+test('offers the secondary battery option once a shunt has been detected', () => {
+  const instance = harness()
+  const key = '00112233445566778899AABBCCDDEEFF'
+  const shunt = 'AA:BB:CC:DD:EE:FF'
+  const sense = '11:22:33:44:55:66'
+  const macsOffered = () => {
+    const dependency = instance.plugin.schema().properties.devices.items.dependencies
+    return dependency ? new RegExp(dependency.mac.oneOf[0].properties.mac.pattern) : null
+  }
+  const settings = { devices: [
+    { id: 'house', name: 'House', mac: shunt.toLowerCase(), advertisementKey: key },
+    { id: 'starter', name: 'Starter', mac: sense, advertisementKey: key }
+  ] }
+
+  instance.plugin.start(settings)
+  assert.equal(macsOffered(), null)
+
+  const deliver = instance.advertisementCallbacks.get(instance.plugin.id)
+  deliver({ mac: shunt, rssi: -60, manufacturerData: { 737: readout(0xa389, key) } })
+  deliver({ mac: sense, rssi: -60, manufacturerData: { 737: readout(0xa3a5, key) } })
+  assert.equal(macsOffered().test(shunt), true)
+  assert.equal(macsOffered().test(sense), false)
+
+  // Saving the configuration restarts the plugin; detection is kept.
+  instance.plugin.stop()
+  instance.plugin.start(settings)
+  assert.equal(macsOffered().test(shunt), true)
+})
+
 test('status route masks configured keys', () => {
   const instance = harness()
   const key = '00112233445566778899AABBCCDDEEFF'
