@@ -71,7 +71,7 @@ values. Device recognition alone is not considered support.
 | DC Energy Meter | `0x0D` | Decoder from the specification, **untested**, no hardware | diagnostic only |
 | GX Device | `0x07` | Not implemented; the specification marks the layout undetermined | — |
 | AC Charger | `0x08` | Not implemented; the specification marks the layout undetermined | — |
-| Smart Battery Sense | — | Uses the battery monitor record; **untested** | `electrical.batteries.<device-id>` |
+| Smart Battery Sense | `0x02` | Tested (model `0xA3A5`); voltage and temperature only, no current or state of charge | `electrical.batteries.<device-id>` |
 
 Records marked untested decode the layout published in the Victron "Extra
 manufacturer data" specification, with fixture-driven tests built from that
