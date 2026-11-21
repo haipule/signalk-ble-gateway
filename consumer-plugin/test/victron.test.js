@@ -525,6 +525,41 @@ test('treats an all-ones signed current as unavailable', () => {
   }
 })
 
+// A Smart Battery Sense has no shunt. It sends the largest positive value as
+// NA rather than the all-ones pattern the specification names.
+test('treats a positive-maximum signed current as unavailable', () => {
+  for (const decode of [decodeBatteryMonitor, decodeDcEnergyMeter]) {
+    const data = Buffer.alloc(16)
+    writeBits(data, 66, 22, 0x1fffff)
+    assert.equal(decode(data).battery_current_a, null)
+  }
+})
+
+// Field values as captured from a Smart Battery Sense (model 0xA3A5): only
+// voltage and the aux temperature are present.
+test('decodes a Smart Battery Sense as voltage and temperature only', () => {
+  const keyHex = '00112233445566778899AABBCCDDEEFF'
+  const clear = Buffer.alloc(16)
+  writeBits(clear, 0, 16, 0xffff)
+  writeBits(clear, 16, 16, 1237)
+  writeBits(clear, 32, 16, 0)
+  writeBits(clear, 48, 16, 28065)
+  writeBits(clear, 64, 2, 2)
+  writeBits(clear, 66, 22, 0x1fffff)
+  writeBits(clear, 88, 20, 0xfffff)
+  writeBits(clear, 108, 10, 0x3ff)
+
+  const decoded = decodeEnvelope(advertisementFor({ keyHex, modelId: 0xa3a5, clear }), keyHex)
+  assert.equal(decoded.record_name, 'battery_monitor')
+  const values = decoded.measurements
+  assert.ok(Math.abs(values.battery_voltage_v - 12.37) < 1e-9)
+  assert.ok(Math.abs(values.temperature_k - 280.65) < 1e-9)
+  assert.equal(values.battery_current_a, null)
+  assert.equal(values.time_to_go_s, null)
+  assert.equal(values.consumed_ah, null)
+  assert.equal(values.state_of_charge_percent, null)
+})
+
 test('still sign-extends a genuine negative current', () => {
   const data = Buffer.alloc(16)
   writeBits(data, 66, 22, -1500)

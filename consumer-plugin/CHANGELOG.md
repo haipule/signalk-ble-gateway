@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Treat a battery current of 0x1FFFFF as unavailable as well as 0x3FFFFF. A
+  Smart Battery Sense has no shunt and sends 0x1FFFFF, which was published
+  as a current of 2097.151 A.
 - Add an optional secondary battery ID for publishing a BMV or SmartShunt
   auxiliary starter-battery voltage on a standard Signal K battery path.
 - Skip manufacturer records that are not Instant Readout (a leading byte other

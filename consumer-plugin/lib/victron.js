@@ -72,16 +72,23 @@ function valueUnless(raw, unavailable, convert = value => value) {
 }
 
 /**
- * Read a signed field whose NA value is the all-ones bit pattern.
+ * Read a signed field that may carry either of two NA patterns.
  *
- * A sign-extended read can never equal such a sentinel: all-ones reads back as
- * -1, not as the unsigned value the specification names. The field is
- * therefore read unsigned, compared against the sentinel, and only then
- * sign-extended.
+ * The specification names the all-ones pattern (0x3FFFFF for the 22-bit
+ * battery current). Devices without a shunt, such as the Smart Battery Sense,
+ * instead send the largest positive value (0x1FFFFF), following the
+ * convention every other signed Victron field uses (0x7FFF for voltage).
+ * Decoded literally that reads as +2097.151 A, so both patterns mean NA.
+ *
+ * A sign-extended read can never equal the all-ones sentinel: it reads back
+ * as -1. The field is therefore read unsigned, compared against both
+ * sentinels, and only then sign-extended.
  */
-function signedUnlessAllOnes(buffer, start, width, convert = value => value) {
+function signedUnlessUnavailable(buffer, start, width, convert = value => value) {
   const raw = readBits(buffer, start, width)
-  if (raw === null || raw === (2 ** width) - 1) return null
+  const allOnes = (2 ** width) - 1
+  const positiveMax = (2 ** (width - 1)) - 1
+  if (raw === null || raw === allOnes || raw === positiveMax) return null
   const signed = raw & (1 << (width - 1)) ? raw - 2 ** width : raw
   return convert(signed)
 }
@@ -241,7 +248,9 @@ function decodeAuxInput(raw, selector, allowMidVoltage = true) {
 }
 
 /**
- * Decode the battery monitor record (type 0x02), used by SmartShunt and BMV.
+ * Decode the battery monitor record (type 0x02), used by SmartShunt and BMV,
+ * and also by the Smart Battery Sense. The Battery Sense has no shunt and
+ * fills only voltage and the aux temperature; every other field carries NA.
  *
  * spec bit 32  -> 0    time to go        16 bits, minutes,          NA 0xFFFF
  * spec bit 48  -> 16   battery voltage   16 bits, signed, 0.01 V,   NA 0x7FFF
@@ -249,6 +258,7 @@ function decodeAuxInput(raw, selector, allowMidVoltage = true) {
  * spec bit 80  -> 48   aux field         16 bits, meaning per selector
  * spec bit 96  -> 64   aux input          2 bits, selector,         NA 0x3
  * spec bit 98  -> 66   battery current   22 bits, signed, 0.001 A,  NA 0x3FFFFF
+ *                                                    (observed: 0x1FFFFF)
  * spec bit 120 -> 88   consumed Ah       20 bits, 0.1 Ah,           NA 0xFFFFF
  * spec bit 140 -> 108  state of charge   10 bits, 0.1 %,            NA 0x3FF
  *
@@ -269,7 +279,7 @@ function decodeBatteryMonitor(data) {
     battery_voltage_v: valueUnless(voltage, 0x7fff, value => value * 0.01),
     alarm_reason: alarmReason,
     ...decodeAuxInput(auxRaw, auxSelector),
-    battery_current_a: signedUnlessAllOnes(data, 66, 22, value => value * 0.001),
+    battery_current_a: signedUnlessUnavailable(data, 66, 22, value => value * 0.001),
     consumed_ah: valueUnless(consumedAh, 0xfffff, value => -value * 0.1),
     state_of_charge_percent: valueUnless(soc, 0x3ff, value => value * 0.1)
   }
@@ -302,7 +312,7 @@ function decodeDcEnergyMeter(data) {
     // The DC energy meter table lists selectors 0, 2 and 3 only: this record
     // has no mid-point voltage reading.
     ...decodeAuxInput(auxRaw, auxSelector, false),
-    battery_current_a: signedUnlessAllOnes(data, 66, 22, value => value * 0.001)
+    battery_current_a: signedUnlessUnavailable(data, 66, 22, value => value * 0.001)
   }
 }
 
