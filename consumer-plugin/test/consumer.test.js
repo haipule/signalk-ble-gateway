@@ -63,6 +63,25 @@ test('non-readout beacons are ignored and keep the device online with its last r
   assert.equal(status.devices[0].decoded.record_name, 'battery_monitor')
 })
 
+test('keeps the last advertised name from any packet of a configured device', () => {
+  const clock = { t: 1000 }
+  const consumer = newConsumer(clock)
+  assert.equal(consumer.status().devices[0].advertised_name, null)
+
+  // The name arrives in a packet without Instant Readout data.
+  consumer.accept({ ...networkBeacon, name: ' 12v Bat 1 ' })
+  consumer.accept(readout(1))
+  const device = consumer.status().devices[0]
+  assert.equal(device.advertised_name, '12v Bat 1')
+  assert.equal(device.decoded.model_name, 'SmartShunt 500A/50mV')
+})
+
+test('ignores advertised names from devices that are not configured', () => {
+  const consumer = newConsumer({ t: 1000 })
+  consumer.accept({ ...networkBeacon, mac: '11:22:33:44:55:66', name: 'Other' })
+  assert.equal(consumer.status().devices[0].advertised_name, null)
+})
+
 test('a decode error keeps the last good reading and does not flip online', () => {
   const clock = { t: 1000 }
   const consumer = newConsumer(clock)

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Name the device model from its Victron product ID (for example "Smart
+  Battery Sense (Rev2)" or "SmartShunt 500A/50mV") in the status API and web
+  application. Several products share a record layout, such as the battery
+  monitor record, so the record name alone did not identify the device.
+- Show the name a device advertises over BLE in the status API and web
+  application.
+- Escape values placed in the web application's markup.
 - Add an optional secondary battery ID for publishing a BMV or SmartShunt
   auxiliary starter-battery voltage on a standard Signal K battery path.
 - Skip manufacturer records that are not Instant Readout (a leading byte other

@@ -2,6 +2,7 @@
 
 const crypto = require('node:crypto')
 const { parseHex } = require('./ble-advertisement')
+const { modelName } = require('./victron-models')
 
 const VICTRON_COMPANY_ID = 0x02e1
 const RECORD_TYPES = {
@@ -48,6 +49,7 @@ function decodeEnvelope(advertisement, keyValue) {
   return {
     company_id: VICTRON_COMPANY_ID,
     model_id: modelId,
+    model_name: modelName(modelId),
     record_type: recordType,
     record_name: RECORD_TYPES[recordType] || 'unknown',
     nonce,

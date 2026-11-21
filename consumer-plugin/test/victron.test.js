@@ -42,8 +42,28 @@ test('decrypts a Victron manufacturer envelope', () => {
   const decoded = decodeEnvelope(advertisementFor({ keyHex, clear }), keyHex)
 
   assert.equal(decoded.model_id, 0xa389)
+  assert.equal(decoded.model_name, 'SmartShunt 500A/50mV')
   assert.equal(decoded.record_name, 'battery_monitor')
   assert.equal(decoded.decrypted_data, clear.toString('hex').toUpperCase())
+})
+
+// A Smart Battery Sense sends the same battery monitor record as a
+// SmartShunt; only the model ID tells them apart.
+test('names the model of a device sharing the battery monitor record', () => {
+  const keyHex = '00112233445566778899AABBCCDDEEFF'
+  const clear = Buffer.alloc(16)
+  const decoded = decodeEnvelope(advertisementFor({ keyHex, modelId: 0xa3a5, clear }), keyHex)
+  assert.equal(decoded.model_name, 'Smart Battery Sense (Rev2)')
+  assert.equal(decoded.record_name, 'battery_monitor')
+})
+
+test('reports an unknown model ID without a name', () => {
+  const keyHex = '00112233445566778899AABBCCDDEEFF'
+  const clear = Buffer.alloc(16)
+  const decoded = decodeEnvelope(advertisementFor({ keyHex, modelId: 0xfffe, clear }), keyHex)
+  assert.equal(decoded.model_id, 0xfffe)
+  assert.equal(decoded.model_name, null)
+  assert.notEqual(decoded.measurements, null)
 })
 
 test('rejects a key whose first byte does not match', () => {

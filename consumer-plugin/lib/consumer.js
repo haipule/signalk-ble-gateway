@@ -28,6 +28,7 @@ class VictronConsumer {
     this.devices = devices.map(device => ({ ...device, mac: normalizeMac(device.mac) }))
     this.states = new Map()
     this.decodedAt = new Map()
+    this.advertisedNames = new Map()
     this.received = 0
     this.decoded = 0
     this.ignored = 0
@@ -42,6 +43,12 @@ class VictronConsumer {
       this.ignored += 1
       return null
     }
+
+    // Victron devices send their local name only in some packets, often
+    // not the ones carrying Instant Readout data, so the last name seen is
+    // kept for diagnostics rather than taken from the current packet.
+    const advertisedName = typeof advertisement.name === 'string' ? advertisement.name.trim() : ''
+    if (advertisedName) this.advertisedNames.set(device.id, advertisedName)
 
     try {
       const decoded = decodeEnvelope(advertisement, device.advertisementKey)
@@ -89,16 +96,19 @@ class VictronConsumer {
       decoded: this.decoded,
       ignored: this.ignored,
       errors: this.errors,
-      devices: this.devices.map(device => publicDevice(device, this.states.has(device.id) ? {
-        ...this.states.get(device.id),
-        online: this.isOnline(device.id)
-      } : {
-        online: false,
-        last_seen: null,
-        gateway_id: null,
-        rssi: null,
-        decode_error: null,
-        decoded: null
+      devices: this.devices.map(device => publicDevice(device, {
+        ...(this.states.has(device.id) ? {
+          ...this.states.get(device.id),
+          online: this.isOnline(device.id)
+        } : {
+          online: false,
+          last_seen: null,
+          gateway_id: null,
+          rssi: null,
+          decode_error: null,
+          decoded: null
+        }),
+        advertised_name: this.advertisedNames.get(device.id) || null
       }))
     }
   }
